@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="UserMacros">
+    <BaseDir>$(SolutionDir)..\</BaseDir>
+    <DirTag>$(Platform)-$(Configuration)</DirTag>
+    <LibPath>$(BaseDir)lib\$(DirTag)\</LibPath>
+    <ObjPath>$(BaseDir)obj\$(DirTag)\$(ProjectName)\</ObjPath>
+    <BinPath>$(BaseDir)bin\$(DirTag)\</BinPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(BinPath)</OutDir>
+    <IntDir>$(ObjPath)</IntDir>
+    <PackageDir>$(ObjPath)</PackageDir>
+    <SignMode>Off</SignMode>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ConfigurationType)' == 'StaticLibrary'">
+    <OutDir>$(LibPath)</OutDir>
+  </PropertyGroup>
+  <ImportGroup Label="PropertySheets" Condition="$(Configuration.Contains('Debug'))">
+    <Import Project="$(SolutionDir)props\Debug.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="$(Configuration.Contains('Release'))">
+    <Import Project="$(SolutionDir)props\Release.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Platform)' == 'Win32'">
+    <Import Project="$(SolutionDir)props\Win32.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Platform)' == 'x64'">
+    <Import Project="$(SolutionDir)props\x64.props" />
+  </ImportGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level4</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>_WINDOWS;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <RegisterOutput>false</RegisterOutput>
+      <AdditionalLibraryDirectories>$(LibPath);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(LibPath)$(TargetName).lib</ImportLibrary>
+      <AdditionalDependencies>Usbd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Lib>
+      <OutputFile>$(LibPath)$(ProjectName).lib</OutputFile>
+      <AdditionalLibraryDirectories>$(LibPath);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+    <ResourceCompile>
+      <Culture>1033</Culture>
+      <AdditionalIncludeDirectories>$(LibPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>VER_INTERNALNAME_STR=\"$(TargetFileName)\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Midl>
+      <OutputDirectory>$(LibPath)</OutputDirectory>
+      <HeaderFileName>%(FileName).h</HeaderFileName>
+      <DllDataFileName>%(FileName)_dlldata.c</DllDataFileName>
+      <InterfaceIdentifierFileName>%(FileName)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(FileName)_p.c</ProxyFileName>
+      <TypeLibraryName>%(FileName).tlb</TypeLibraryName>
+    </Midl>
+  </ItemDefinitionGroup>
+</Project>
