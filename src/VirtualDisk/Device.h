@@ -22,7 +22,6 @@ private:
 
     WDFWMIINSTANCE WmiDeviceArrivalEvent;
     BOOLEAN WmiPowerDeviceEnableRegistered;
-    //TOASTER_INTERFACE_STANDARD BusInterface;//TODO Should we use it?
     HANDLE handle;
     LARGE_INTEGER fileSize;
     WDFQUEUE  customQueue;
