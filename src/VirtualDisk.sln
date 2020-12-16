@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualDisk", "VirtualDisk\VirtualDisk.vcxproj", "{CF51C52A-0264-4FEE-B690-13073FEFC6A4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{F0A27BD5-7840-47F8-A313-4ACEFF94DB58}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "src\props", "{9D86794A-DD0E-4DA3-9537-48CCC077AF3E}"
 	ProjectSection(SolutionItems) = preProject
 		props\Debug.props = props\Debug.props
 		props\Main.props = props\Main.props
@@ -37,9 +37,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{CF51C52A-0264-4FEE-B690-13073FEFC6A4} = {41F1D3A7-8335-4EA3-B796-F18CBFDD1B1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8AF34DBA-AD8E-41EB-801C-66604CC2F2CC}

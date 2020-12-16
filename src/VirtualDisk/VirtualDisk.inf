@@ -4,8 +4,8 @@
 
 [Version]
 Signature="$WINDOWS NT$"
-Class=Sample ; TODO: edit Class
-ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Class=DiskDrive ; TODO: edit Class -->done
+ClassGuid={4d36e967-e325-11ce-bfc1-08002be10318} ; TODO: edit ClassGuid -->done
 Provider=%ManufacturerName%
 CatalogFile=VirtualDisk.cat
 DriverVer= ; TODO: set DriverVer in stampinf property pages
@@ -17,10 +17,9 @@ VirtualDisk_Device_CoInstaller_CopyFiles = 11
 
 ; ================= Class section =====================
 
-[ClassInstall32]
-Addreg=SampleClassReg
+Addreg=DiskDriveClassReg ;TODO check
 
-[SampleClassReg]
+[DiskDriveClassReg] ;TODO check
 HKR,,,0,%ClassName%
 HKR,,Icon,,-5
 
@@ -80,8 +79,8 @@ KmdfLibraryVersion = $KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
-ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
-ClassName="Samples" ; TODO: edit ClassName
+ManufacturerName="Apriorit" ;TODO: Replace with your manufacturer name -->done
+ClassName="VirtualDisk" ; TODO: edit ClassName -->done
 DiskName = "VirtualDisk Installation Disk"
 VirtualDisk.DeviceDesc = "VirtualDisk Device"
 VirtualDisk.SVCDESC = "VirtualDisk Service"
