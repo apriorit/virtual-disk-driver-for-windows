@@ -13,5 +13,4 @@ private:
 	Driver& operator= (const Driver&) = delete;
 
 	static NTSTATUS evtDeviceAdd(_In_ WDFDRIVER driver, _In_ PWDFDEVICE_INIT deviceInit);
-	//TODO Check cleanup
 };
