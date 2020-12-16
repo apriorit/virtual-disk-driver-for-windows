@@ -19,7 +19,6 @@ private:
     static void evtIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In_ size_t outputBufferLength, _In_ size_t inputBufferLength, _In_ ULONG ioControlCode);
 
 private:
-
     WDFWMIINSTANCE WmiDeviceArrivalEvent;
     BOOLEAN WmiPowerDeviceEnableRegistered;
     HANDLE handle;

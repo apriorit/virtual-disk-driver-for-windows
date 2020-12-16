@@ -32,7 +32,6 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
 
     InitializeObjectAttributes(&objAttr, &uniName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
-
     WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&fdoAttributes, Device);
 
 

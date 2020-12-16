@@ -2,6 +2,7 @@
 #include "Driver.h"
 #include "Device.h"
 
+
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, DeviceGetData)
 
 NTSTATUS Driver::create(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath)

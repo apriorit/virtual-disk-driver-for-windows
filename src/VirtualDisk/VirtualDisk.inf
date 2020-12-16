@@ -4,8 +4,8 @@
 
 [Version]
 Signature="$WINDOWS NT$"
-Class=DiskDrive ; TODO: edit Class -->done
-ClassGuid={4d36e967-e325-11ce-bfc1-08002be10318} ; TODO: edit ClassGuid -->done
+Class=DiskDrive 
+ClassGuid={4d36e967-e325-11ce-bfc1-08002be10318} 
 Provider=%ManufacturerName%
 CatalogFile=VirtualDisk.cat
 DriverVer= ; TODO: set DriverVer in stampinf property pages
@@ -79,8 +79,8 @@ KmdfLibraryVersion = $KMDFVERSION$
 
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
-ManufacturerName="Apriorit" ;TODO: Replace with your manufacturer name -->done
-ClassName="VirtualDisk" ; TODO: edit ClassName -->done
+ManufacturerName="Apriorit" 
+ClassName="VirtualDisk" 
 DiskName = "VirtualDisk Installation Disk"
 VirtualDisk.DeviceDesc = "VirtualDisk Device"
 VirtualDisk.SVCDESC = "VirtualDisk Service"
