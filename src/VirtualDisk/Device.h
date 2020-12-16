@@ -1,14 +1,11 @@
 #pragma once
 
-
 class Device
 {
 
 public:
     static NTSTATUS create(_Inout_ PWDFDEVICE_INIT deviceInit);
     
-
-
 private:
     Device(_In_ WDFDEVICE device);
     ~Device() = default;
@@ -25,7 +22,7 @@ private:
 
     WDFWMIINSTANCE WmiDeviceArrivalEvent;
     BOOLEAN WmiPowerDeviceEnableRegistered;
-    //TOASTER_INTERFACE_STANDARD BusInterface;//TODO Should I use it?
+    //TOASTER_INTERFACE_STANDARD BusInterface;//TODO Should we use it?
     HANDLE handle;
     LARGE_INTEGER fileSize;
     WDFQUEUE  customQueue;

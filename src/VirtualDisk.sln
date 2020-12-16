@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualDisk", "VirtualDisk\VirtualDisk.vcxproj", "{CF51C52A-0264-4FEE-B690-13073FEFC6A4}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "src\props", "{9D86794A-DD0E-4DA3-9537-48CCC077AF3E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7368A955-0769-490D-BB9D-4667E341363E}"
 	ProjectSection(SolutionItems) = preProject
 		props\Debug.props = props\Debug.props
 		props\Main.props = props\Main.props

@@ -6,7 +6,7 @@ WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, DeviceGetData)
 NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
 {
     NTSTATUS                  status = STATUS_SUCCESS;
-    Device*                   deviceData; //TODO Check FDO struct
+    Device*                   deviceData; 
     WDF_OBJECT_ATTRIBUTES     fdoAttributes;
     WDFDEVICE                 hDevice;
     UNICODE_STRING            uniName;
@@ -16,8 +16,6 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
     FILE_STANDARD_INFORMATION fileInformation = { 0 };
     UNICODE_STRING            deviceName;
     UNICODE_STRING            symbolicLinkName;
-
-    
 
     PAGED_CODE();
 
@@ -32,9 +30,7 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
 
     RtlInitUnicodeString(&uniName, L"\\DosDevices\\C:\\example.txt");
 
-    InitializeObjectAttributes(&objAttr, &uniName,
-        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-        NULL, NULL);
+    InitializeObjectAttributes(&objAttr, &uniName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
 
 
     WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&fdoAttributes, Device);
@@ -59,7 +55,6 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
     if (!NT_SUCCESS(status)) {
         return status;
     }
-
 
 
     deviceData = DeviceGetData(hDevice);
