@@ -15,14 +15,6 @@ PnpLockDown=1
 DefaultDestDir = 12
 VirtualDisk_Device_CoInstaller_CopyFiles = 11
 
-; ================= Class section =====================
-
-Addreg=DiskDriveClassReg ;TODO check
-
-[DiskDriveClassReg] ;TODO check
-HKR,,,0,%ClassName%
-HKR,,Icon,,-5
-
 [SourceDisksNames]
 1 = %DiskName%,,,""
 

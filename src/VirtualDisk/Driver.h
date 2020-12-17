@@ -3,7 +3,7 @@
 class Driver
 {
 public:
-	static NTSTATUS create (_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath);
+	static NTSTATUS create(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING RegistryPath);
 
 private:
 	Driver() = default;
@@ -12,5 +12,5 @@ private:
 	Driver(const Driver&) = delete;
 	Driver& operator= (const Driver&) = delete;
 
-	static NTSTATUS evtDeviceAdd(_In_ WDFDRIVER driver, _In_ PWDFDEVICE_INIT deviceInit);
+	static NTSTATUS onDeviceAdd(_In_ WDFDRIVER driver, _In_ PWDFDEVICE_INIT deviceInit);
 };

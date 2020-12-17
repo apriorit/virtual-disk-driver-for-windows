@@ -1,39 +1,45 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Device.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Main.cpp">
+      <Filter>Main</Filter>
     </ClCompile>
     <ClCompile Include="Driver.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Driver</Filter>
     </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Device.cpp">
+      <Filter>Device</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Pch</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Device.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Driver.h">
-      <Filter>Header Files</Filter>
+      <Filter>Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="Device.h">
+      <Filter>Device</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
-      <Filter>Header Files</Filter>
+      <Filter>Pch</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{5d321f7f-9542-4c7c-81ab-6d63b40c6fd0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{8bdaa90a-cad1-4c64-a443-6e611dcbe86d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{4a97447c-d367-435f-b1fc-5e5a23983417}</UniqueIdentifier>
+    <Filter Include="Driver">
+      <UniqueIdentifier>{b39d1132-ffa5-47a7-94d6-38d783073a2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Device">
+      <UniqueIdentifier>{aa1c40f1-f682-45b3-ad4b-b77b555d40cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pch">
+      <UniqueIdentifier>{5852e1f9-a12c-449c-b7bc-b470e9fdbbd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{5d321f7f-9542-4c7c-81ab-6d63b40c6fd0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
