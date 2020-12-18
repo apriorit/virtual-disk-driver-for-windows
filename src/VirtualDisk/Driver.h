@@ -12,5 +12,5 @@ private:
 	Driver(const Driver&) = delete;
 	Driver& operator= (const Driver&) = delete;
 
-	static NTSTATUS onDeviceAdd(_In_ WDFDRIVER driver, _In_ PWDFDEVICE_INIT deviceInit);
+	static NTSTATUS onDeviceAdd(_In_ WDFDRIVER wdfDriver, _In_ PWDFDEVICE_INIT deviceInit);
 };

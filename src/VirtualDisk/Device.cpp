@@ -3,7 +3,7 @@
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
 
-NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
+NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit)
 {
     PAGED_CODE();
 
@@ -19,9 +19,22 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
         return status;
     }
 
+    WDFKEY key;
+    WdfDriverOpenParametersRegistryKey(wdfDriver, KEY_READ | KEY_WRITE, WDF_NO_OBJECT_ATTRIBUTES, &key);
+    WDFSTRING string;
+    status = WdfStringCreate(NULL, WDF_NO_OBJECT_ATTRIBUTES, &string);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+    UNICODE_STRING valueName;
+    RtlInitUnicodeString(&valueName, L"ImagePath");
+    status = WdfRegistryQueryString(key, &valueName, string);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
     UNICODE_STRING uniName;
-    RtlInitUnicodeString(&uniName, L"\\DosDevices\\C:\\example.txt");
-    
+    WdfStringGetUnicodeString(string, &uniName);
+        
     OBJECT_ATTRIBUTES objAttr;
     InitializeObjectAttributes(&objAttr, &uniName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     
