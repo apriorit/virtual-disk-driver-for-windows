@@ -12,9 +12,7 @@ NTSTATUS Driver::create(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING R
 
 NTSTATUS Driver::onDeviceAdd(_In_ WDFDRIVER wdfDriver, _In_ PWDFDEVICE_INIT deviceInit)
 {
-    UNREFERENCED_PARAMETER(wdfDriver);
-
-    NTSTATUS status = Device::create(deviceInit);
+    NTSTATUS status = Device::create(wdfDriver, deviceInit);
     if (!NT_SUCCESS(status))
     {
         return status;

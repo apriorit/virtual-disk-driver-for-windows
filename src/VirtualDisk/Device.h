@@ -3,7 +3,7 @@
 class Device
 {
 public:
-    static NTSTATUS create(_Inout_ PWDFDEVICE_INIT deviceInit);
+    static NTSTATUS create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit);
     
 private:
     Device(_In_ WDFDEVICE device);
