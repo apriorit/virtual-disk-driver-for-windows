@@ -19,21 +19,21 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
         return status;
     }
 
-    WDFKEY key;
-    WdfDriverOpenParametersRegistryKey(wdfDriver, KEY_READ | KEY_WRITE, WDF_NO_OBJECT_ATTRIBUTES, &key);
-    WDFSTRING string;
-    status = WdfStringCreate(NULL, WDF_NO_OBJECT_ATTRIBUTES, &string);
+    WDFKEY keyImagePath;
+    WdfDriverOpenParametersRegistryKey(wdfDriver, KEY_READ | KEY_WRITE, WDF_NO_OBJECT_ATTRIBUTES, &keyImagePath);
+    WDFSTRING stringObjImagePath;
+    status = WdfStringCreate(NULL, WDF_NO_OBJECT_ATTRIBUTES, &stringObjImagePath);
     if (!NT_SUCCESS(status)) {
         return status;
     }
-    UNICODE_STRING valueName;
-    RtlInitUnicodeString(&valueName, L"ImagePath");
-    status = WdfRegistryQueryString(key, &valueName, string);
+    UNICODE_STRING valueImagePath;
+    RtlInitUnicodeString(&valueImagePath, L"ImagePath");
+    status = WdfRegistryQueryString(keyImagePath, &valueImagePath, stringObjImagePath);
     if (!NT_SUCCESS(status)) {
         return status;
     }
     UNICODE_STRING uniName;
-    WdfStringGetUnicodeString(string, &uniName);
+    WdfStringGetUnicodeString(stringObjImagePath, &uniName);
         
     OBJECT_ATTRIBUTES objAttr;
     InitializeObjectAttributes(&objAttr, &uniName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
@@ -75,8 +75,22 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
 
     self->m_fileSize = fileInformation.EndOfFile;
 
+    WDFKEY keyDriveLetter;
+    WdfDriverOpenParametersRegistryKey(wdfDriver, KEY_READ | KEY_WRITE, WDF_NO_OBJECT_ATTRIBUTES, &keyDriveLetter);
+    WDFSTRING stringObjDriveLetter;
+    status = WdfStringCreate(NULL, WDF_NO_OBJECT_ATTRIBUTES, &stringObjDriveLetter);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+    UNICODE_STRING valueDriveLetter;
+    RtlInitUnicodeString(&valueDriveLetter, L"DriveLetter");
+    status = WdfRegistryQueryString(keyDriveLetter, &valueDriveLetter, stringObjDriveLetter);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
     UNICODE_STRING symbolicLinkName;
-    RtlInitUnicodeString(&symbolicLinkName, L"\\DosDevices\\W:");
+    WdfStringGetUnicodeString(stringObjDriveLetter, &symbolicLinkName);
+
     status = WdfDeviceCreateSymbolicLink(hDevice, &symbolicLinkName);
     if (!NT_SUCCESS(status)) {
         return status;
