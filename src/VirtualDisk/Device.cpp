@@ -177,7 +177,7 @@ VOID Device::onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
 
     PVOID Buffer;
     NTSTATUS status = WdfRequestRetrieveInputBuffer(request, 0, &Buffer, NULL);
-
+    
     ULONG_PTR bytesWritten = 0;
     if (NT_SUCCESS(status)) {
         WDF_REQUEST_PARAMETERS Param;
@@ -189,6 +189,7 @@ VOID Device::onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
         status = ZwWriteFile(self->m_fileHandle, NULL, NULL, NULL, &ioStatusBlock, Buffer, (ULONG)length, (PLARGE_INTEGER)&Param.Parameters.Write.DeviceOffset, NULL);
         bytesWritten = ioStatusBlock.Information;
     }
+
     WdfRequestCompleteWithInformation(request, status, bytesWritten);
 }
 
@@ -209,7 +210,7 @@ VOID Device::onIoWriteForward(WDFQUEUE queue, WDFREQUEST request, size_t length)
     UNREFERENCED_PARAMETER(length);
 
     auto self = getDevice(WdfIoQueueGetDevice(queue));
-    
+
     KIRQL oldIrql;
     KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
     WdfRequestForwardToIoQueue(request, self->m_fileQueue);
@@ -224,6 +225,9 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
 
     NTSTATUS status = STATUS_SUCCESS;
     ULONG_PTR bytesWritten = 0;
+
+    KdPrint(("IoControlCode=0x%X\n", ioControlCode));
+
     switch (ioControlCode) {
     case IOCTL_STORAGE_GET_DEVICE_NUMBER:
     {
@@ -318,8 +322,10 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         break;
     }
 
+    case IOCTL_DISK_GET_MEDIA_TYPES:
+    case IOCTL_STORAGE_GET_MEDIA_TYPES:
     case IOCTL_DISK_GET_DRIVE_GEOMETRY:
-    {            
+    {
         DISK_GEOMETRY* diskGeometry;
         status = WdfRequestRetrieveOutputBuffer(request, sizeof(DISK_GEOMETRY), (PVOID*)&diskGeometry, NULL);
         if (!NT_SUCCESS(status)) {
@@ -332,7 +338,12 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         diskGeometry->SectorsPerTrack = 1;
         diskGeometry->TracksPerCylinder = 1;
         diskGeometry->Cylinders.QuadPart = self->m_fileSize.QuadPart / diskGeometry->BytesPerSector;
-        diskGeometry->MediaType = FixedMedia;
+        diskGeometry->MediaType = RemovableMedia; //FixedMedia;
+
+        if (diskGeometry->Cylinders.QuadPart * diskGeometry->BytesPerSector < self->m_fileSize.QuadPart)
+        {
+            ++diskGeometry->Cylinders.QuadPart;
+        }
 
         bytesWritten = sizeof(*diskGeometry);
         break;
@@ -364,6 +375,66 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
 
     case IOCTL_DISK_VOLUMES_ARE_READY:
     {
+        status = STATUS_SUCCESS;
+        break;
+    }
+
+    case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
+    {
+        MOUNTDEV_NAME* mountDevName;
+        status = WdfRequestRetrieveOutputBuffer(request, sizeof(MOUNTDEV_NAME), (PVOID*)&mountDevName, NULL);
+        if (!NT_SUCCESS(status)) {
+            break;
+        }
+
+        wcscpy(mountDevName->Name, L"\\DosDevices\\W:");
+        mountDevName->NameLength = sizeof(mountDevName->Name);
+        status = STATUS_SUCCESS;
+        bytesWritten = sizeof(*mountDevName);
+
+        break;
+    }
+
+    case IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES:
+    {
+        status = STATUS_SUCCESS;
+        break;
+    }
+    case IOCTL_DISK_IS_WRITABLE:
+    {
+        status = STATUS_SUCCESS;
+        break;
+    }
+
+    case IOCTL_DISK_GET_PARTITION_INFO:
+    {
+        PARTITION_INFORMATION* partInfo;
+        status = WdfRequestRetrieveOutputBuffer(request, sizeof(PARTITION_INFORMATION), (PVOID*)&partInfo, NULL);
+        if (!NT_SUCCESS(status)) {
+            break;
+        }
+
+        auto self = getDevice(WdfIoQueueGetDevice(queue));
+
+        partInfo->StartingOffset.QuadPart = 512;
+        partInfo->PartitionLength.QuadPart = self->m_fileSize.QuadPart - 512;
+        partInfo->HiddenSectors = 1;
+        partInfo->PartitionNumber = 0;
+        partInfo->PartitionType = PARTITION_ENTRY_UNUSED;
+        partInfo->BootIndicator = FALSE;
+        partInfo->RecognizedPartition = FALSE;
+        partInfo->RewritePartition = FALSE;
+
+        bytesWritten = sizeof(*partInfo);
+    }
+
+    case IOCTL_DISK_SET_PARTITION_INFO:
+    {
+        if (inputBufferLength < sizeof(SET_PARTITION_INFORMATION))
+        {
+            status = STATUS_INVALID_PARAMETER;
+            break;
+        }
         status = STATUS_SUCCESS;
         break;
     }
