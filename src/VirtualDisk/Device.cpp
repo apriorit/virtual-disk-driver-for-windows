@@ -3,7 +3,7 @@
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
 
-const unsigned short DEVICE_NAME[] = L"\\Device\\MyVirtualDisk";
+const wchar_t DeviceName[] = L"\\Device\\MyVirtualDisk";
 
 NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit)
 {
@@ -13,7 +13,7 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
     WdfDeviceInitSetIoType(deviceInit, WdfDeviceIoDirect);
     
     UNICODE_STRING deviceName;
-    RtlInitUnicodeString(&deviceName, DEVICE_NAME);
+    RtlInitUnicodeString(&deviceName, DeviceName);
     
     NTSTATUS status = STATUS_SUCCESS;
     status = WdfDeviceInitAssignName(deviceInit, &deviceName);
