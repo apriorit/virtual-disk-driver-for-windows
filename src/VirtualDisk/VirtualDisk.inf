@@ -52,7 +52,7 @@ ServiceBinary  = %12%\VirtualDisk.sys
 AddReg=VirtualDisk_Device_AddReg
 
 [VirtualDisk_Device_AddReg]
-HKR,"Parameters","ImagePath",0x00000000,"\??\C:\image.bin" 
+HKR,"Parameters","ImagePath",0x00000000,"\??\C:\imagenew.bin" 
 ;
 ;--- VirtualDisk_Device Coinstaller installation ------
 ;

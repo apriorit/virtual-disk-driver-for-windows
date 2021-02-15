@@ -3,6 +3,8 @@
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
 
+const wchar_t DeviceName[] = L"\\Device\\MyVirtualDisk";
+
 NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit)
 {
     PAGED_CODE();
@@ -11,7 +13,7 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
     WdfDeviceInitSetIoType(deviceInit, WdfDeviceIoDirect);
     
     UNICODE_STRING deviceName;
-    RtlInitUnicodeString(&deviceName, L"\\Device\\MyVirtualDisk");
+    RtlInitUnicodeString(&deviceName, DeviceName);
     
     NTSTATUS status = STATUS_SUCCESS;
     status = WdfDeviceInitAssignName(deviceInit, &deviceName);
@@ -19,21 +21,21 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
         return status;
     }
 
-    WDFKEY key;
-    WdfDriverOpenParametersRegistryKey(wdfDriver, KEY_READ | KEY_WRITE, WDF_NO_OBJECT_ATTRIBUTES, &key);
-    WDFSTRING string;
-    status = WdfStringCreate(NULL, WDF_NO_OBJECT_ATTRIBUTES, &string);
+    WDFKEY keyImagePath;
+    WdfDriverOpenParametersRegistryKey(wdfDriver, KEY_READ | KEY_WRITE, WDF_NO_OBJECT_ATTRIBUTES, &keyImagePath);
+    WDFSTRING stringObjImagePath;
+    status = WdfStringCreate(NULL, WDF_NO_OBJECT_ATTRIBUTES, &stringObjImagePath);
     if (!NT_SUCCESS(status)) {
         return status;
     }
-    UNICODE_STRING valueName;
-    RtlInitUnicodeString(&valueName, L"ImagePath");
-    status = WdfRegistryQueryString(key, &valueName, string);
+    UNICODE_STRING valueImagePath;
+    RtlInitUnicodeString(&valueImagePath, L"ImagePath");
+    status = WdfRegistryQueryString(keyImagePath, &valueImagePath, stringObjImagePath);
     if (!NT_SUCCESS(status)) {
         return status;
     }
     UNICODE_STRING uniName;
-    WdfStringGetUnicodeString(string, &uniName);
+    WdfStringGetUnicodeString(stringObjImagePath, &uniName);
         
     OBJECT_ATTRIBUTES objAttr;
     InitializeObjectAttributes(&objAttr, &uniName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
@@ -74,13 +76,6 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
     }
 
     self->m_fileSize = fileInformation.EndOfFile;
-
-    UNICODE_STRING symbolicLinkName;
-    RtlInitUnicodeString(&symbolicLinkName, L"\\DosDevices\\W:");
-    status = WdfDeviceCreateSymbolicLink(hDevice, &symbolicLinkName);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
 
     status = Device::init(hDevice, self);
     return status;
@@ -163,7 +158,7 @@ VOID Device::onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
 
     PVOID Buffer;
     NTSTATUS status = WdfRequestRetrieveInputBuffer(request, 0, &Buffer, NULL);
-
+    
     ULONG_PTR bytesWritten = 0;
     if (NT_SUCCESS(status)) {
         WDF_REQUEST_PARAMETERS Param;
@@ -175,6 +170,7 @@ VOID Device::onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
         status = ZwWriteFile(self->m_fileHandle, NULL, NULL, NULL, &ioStatusBlock, Buffer, (ULONG)length, (PLARGE_INTEGER)&Param.Parameters.Write.DeviceOffset, NULL);
         bytesWritten = ioStatusBlock.Information;
     }
+
     WdfRequestCompleteWithInformation(request, status, bytesWritten);
 }
 
@@ -195,7 +191,7 @@ VOID Device::onIoWriteForward(WDFQUEUE queue, WDFREQUEST request, size_t length)
     UNREFERENCED_PARAMETER(length);
 
     auto self = getDevice(WdfIoQueueGetDevice(queue));
-    
+
     KIRQL oldIrql;
     KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
     WdfRequestForwardToIoQueue(request, self->m_fileQueue);
@@ -210,6 +206,9 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
 
     NTSTATUS status = STATUS_SUCCESS;
     ULONG_PTR bytesWritten = 0;
+
+    KdPrint(("IoControlCode=0x%X\n", ioControlCode));
+
     switch (ioControlCode) {
     case IOCTL_STORAGE_GET_DEVICE_NUMBER:
     {
@@ -304,8 +303,10 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         break;
     }
 
+    case IOCTL_DISK_GET_MEDIA_TYPES:
+    case IOCTL_STORAGE_GET_MEDIA_TYPES:
     case IOCTL_DISK_GET_DRIVE_GEOMETRY:
-    {            
+    {
         DISK_GEOMETRY* diskGeometry;
         status = WdfRequestRetrieveOutputBuffer(request, sizeof(DISK_GEOMETRY), (PVOID*)&diskGeometry, NULL);
         if (!NT_SUCCESS(status)) {
@@ -317,8 +318,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         diskGeometry->BytesPerSector = 512;
         diskGeometry->SectorsPerTrack = 1;
         diskGeometry->TracksPerCylinder = 1;
-        diskGeometry->Cylinders.QuadPart = self->m_fileSize.QuadPart / diskGeometry->BytesPerSector;
-        diskGeometry->MediaType = FixedMedia;
+        diskGeometry->Cylinders.QuadPart = (self->m_fileSize.QuadPart + diskGeometry->BytesPerSector - 1) / diskGeometry->BytesPerSector;
+        diskGeometry->MediaType = RemovableMedia;
 
         bytesWritten = sizeof(*diskGeometry);
         break;
@@ -354,8 +355,52 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         break;
     }
 
+    case IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES:
+    {
+        status = STATUS_SUCCESS;
+        break;
+    }
+    case IOCTL_DISK_IS_WRITABLE:
+    {
+        status = STATUS_SUCCESS;
+        break;
+    }
+
+    case IOCTL_DISK_GET_PARTITION_INFO:
+    {
+        PARTITION_INFORMATION* partInfo;
+        status = WdfRequestRetrieveOutputBuffer(request, sizeof(PARTITION_INFORMATION), (PVOID*)&partInfo, NULL);
+        if (!NT_SUCCESS(status)) {
+            break;
+        }
+
+        auto self = getDevice(WdfIoQueueGetDevice(queue));
+
+        partInfo->StartingOffset.QuadPart = 0;
+        partInfo->PartitionLength.QuadPart = self->m_fileSize.QuadPart;
+        partInfo->HiddenSectors = 0;
+        partInfo->PartitionNumber = 0;
+        partInfo->PartitionType = PARTITION_ENTRY_UNUSED;
+        partInfo->BootIndicator = FALSE;
+        partInfo->RecognizedPartition = FALSE;
+        partInfo->RewritePartition = FALSE;
+
+        bytesWritten = sizeof(*partInfo);
+    }
+
+    case IOCTL_DISK_SET_PARTITION_INFO:
+    {
+        if (inputBufferLength < sizeof(SET_PARTITION_INFORMATION))
+        {
+            status = STATUS_INVALID_PARAMETER;
+            break;
+        }
+        status = STATUS_SUCCESS;
+        break;
+    }
+
     default:
-        status = STATUS_NOT_SUPPORTED;
+        status = STATUS_INVALID_DEVICE_REQUEST;
     }
 
     WdfRequestCompleteWithInformation(request, status, bytesWritten);
