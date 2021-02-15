@@ -3,6 +3,8 @@
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
 
+const unsigned short DEVICE_NAME[] = L"\\Device\\MyVirtualDisk";
+
 NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit)
 {
     PAGED_CODE();
@@ -11,7 +13,7 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
     WdfDeviceInitSetIoType(deviceInit, WdfDeviceIoDirect);
     
     UNICODE_STRING deviceName;
-    RtlInitUnicodeString(&deviceName, L"\\Device\\MyVirtualDisk");
+    RtlInitUnicodeString(&deviceName, DEVICE_NAME);
     
     NTSTATUS status = STATUS_SUCCESS;
     status = WdfDeviceInitAssignName(deviceInit, &deviceName);
@@ -337,13 +339,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         diskGeometry->BytesPerSector = 512;
         diskGeometry->SectorsPerTrack = 1;
         diskGeometry->TracksPerCylinder = 1;
-        diskGeometry->Cylinders.QuadPart = self->m_fileSize.QuadPart / diskGeometry->BytesPerSector;
-        diskGeometry->MediaType = RemovableMedia; //FixedMedia;
-
-        if (diskGeometry->Cylinders.QuadPart * diskGeometry->BytesPerSector < self->m_fileSize.QuadPart)
-        {
-            ++diskGeometry->Cylinders.QuadPart;
-        }
+        diskGeometry->Cylinders.QuadPart = (self->m_fileSize.QuadPart + diskGeometry->BytesPerSector - 1) / diskGeometry->BytesPerSector;
+        diskGeometry->MediaType = RemovableMedia;
 
         bytesWritten = sizeof(*diskGeometry);
         break;
@@ -381,17 +378,7 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
 
     case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
     {
-        MOUNTDEV_NAME* mountDevName;
-        status = WdfRequestRetrieveOutputBuffer(request, sizeof(MOUNTDEV_NAME), (PVOID*)&mountDevName, NULL);
-        if (!NT_SUCCESS(status)) {
-            break;
-        }
-
-        wcscpy(mountDevName->Name, L"\\DosDevices\\W:");
-        mountDevName->NameLength = sizeof(mountDevName->Name);
-        status = STATUS_SUCCESS;
-        bytesWritten = sizeof(*mountDevName);
-
+        status = STATUS_INVALID_DEVICE_REQUEST;
         break;
     }
 
@@ -416,9 +403,9 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
 
         auto self = getDevice(WdfIoQueueGetDevice(queue));
 
-        partInfo->StartingOffset.QuadPart = 512;
-        partInfo->PartitionLength.QuadPart = self->m_fileSize.QuadPart - 512;
-        partInfo->HiddenSectors = 1;
+        partInfo->StartingOffset.QuadPart = 0;
+        partInfo->PartitionLength.QuadPart = self->m_fileSize.QuadPart;
+        partInfo->HiddenSectors = 0;
         partInfo->PartitionNumber = 0;
         partInfo->PartitionType = PARTITION_ENTRY_UNUSED;
         partInfo->BootIndicator = FALSE;
@@ -440,7 +427,7 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     }
 
     default:
-        status = STATUS_NOT_SUPPORTED;
+        status = STATUS_INVALID_DEVICE_REQUEST;
     }
 
     WdfRequestCompleteWithInformation(request, status, bytesWritten);
