@@ -376,12 +376,6 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         break;
     }
 
-    case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
-    {
-        status = STATUS_INVALID_DEVICE_REQUEST;
-        break;
-    }
-
     case IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES:
     {
         status = STATUS_SUCCESS;
