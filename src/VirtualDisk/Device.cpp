@@ -77,27 +77,6 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
 
     self->m_fileSize = fileInformation.EndOfFile;
 
-    WDFKEY keyDriveLetter;
-    WdfDriverOpenParametersRegistryKey(wdfDriver, KEY_READ | KEY_WRITE, WDF_NO_OBJECT_ATTRIBUTES, &keyDriveLetter);
-    WDFSTRING stringObjDriveLetter;
-    status = WdfStringCreate(NULL, WDF_NO_OBJECT_ATTRIBUTES, &stringObjDriveLetter);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
-    UNICODE_STRING valueDriveLetter;
-    RtlInitUnicodeString(&valueDriveLetter, L"DriveLetter");
-    status = WdfRegistryQueryString(keyDriveLetter, &valueDriveLetter, stringObjDriveLetter);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
-    UNICODE_STRING symbolicLinkName;
-    WdfStringGetUnicodeString(stringObjDriveLetter, &symbolicLinkName);
-
-    status = WdfDeviceCreateSymbolicLink(hDevice, &symbolicLinkName);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
-
     status = Device::init(hDevice, self);
     return status;
 }
