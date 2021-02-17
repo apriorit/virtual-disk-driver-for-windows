@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
         std::cout << "Correct using: " << std::endl <<
             "virtualdiskcontrol open <filepath> - open existing disk image" << std::endl <<
             "virtualdiskcontrol create <filepath> <size> - create and open new disk image" << std::endl;
+        return -1;
     }
     if (argc == 3 && command == "open")
     {
