@@ -24,7 +24,7 @@ void WINAPI SwDeviceCreateCallback(
     UNREFERENCED_PARAMETER(pszDeviceInstanceId);
 }
 
-HSWDEVICE createDevice(const char* filePath)
+HSWDEVICE createDevice(const wchar_t* filePath)
 {
     HSWDEVICE hSwDevice = NULL;
     HANDLE hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -34,7 +34,7 @@ HSWDEVICE createDevice(const char* filePath)
         return hSwDevice;
     }
 
-    auto instanceId = std::to_wstring(std::hash<std::string>{}(filePath));
+    auto instanceId = std::to_wstring(std::hash<std::wstring>{}(filePath));
     SW_DEVICE_CREATE_INFO deviceCreateInfo{ 0 };
     PCWSTR description = L"VirtualDisk Device";
     PCWSTR hardwareIds = L"Root\\VirtualDisk";
@@ -67,19 +67,19 @@ HSWDEVICE createDevice(const char* filePath)
     return hSwDevice;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, wchar_t* argv[])
 {
-    std::string command = argv[1];
-    const char* filePath = argv[2];
+    std::wstring command = argv[1];
+    const wchar_t* filePath = argv[2];
 
-    if (argc < 3 || (argc == 3 && command != "open") || (argc == 4 && command != "create"))
+    if (argc < 3 || (argc == 3 && command != L"open") || (argc == 4 && command != L"create"))
     {
         std::cout << "Correct using: " << std::endl <<
             "virtualdiskcontrol open <filepath> - open existing disk image" << std::endl <<
             "virtualdiskcontrol create <filepath> <size> - create and open new disk image" << std::endl;
-        return -1;
+        return 1;
     }
-    if (argc == 3 && command == "open")
+    if (argc == 3 && command == L"open")
     {
         std::fstream existingFile;
         if (std::filesystem::exists(filePath))
@@ -93,9 +93,9 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (argc == 4 && command == "create")
+    if (argc == 4 && command == L"create")
     {
-        const char* sizeChar = argv[3];
+        const wchar_t* sizeChar = argv[3];
 
         if (std::filesystem::exists(filePath))
         {
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
         else
         {
             std::fstream newFile(filePath);
-            size_t sizeInt = std::strtol(sizeChar, NULL, 10);
+            size_t sizeInt = _wtoi(sizeChar);
             std::filesystem::resize_file(filePath, sizeInt);
             if (newFile.is_open())
             {
