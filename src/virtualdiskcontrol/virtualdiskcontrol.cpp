@@ -72,7 +72,7 @@ int main(int argc, wchar_t* argv[])
     std::wstring command = argv[1];
     const wchar_t* filePath = argv[2];
 
-    if (argc < 3 || (argc == 3 && command != L"open") || (argc == 4 && command != L"create"))
+    if (argc < 3 && (argc == 3 && command != L"open") && (argc == 4 && command != L"create"))
     {
         std::cout << "Correct using: " << std::endl <<
             "virtualdiskcontrol open <filepath> - open existing disk image" << std::endl <<
