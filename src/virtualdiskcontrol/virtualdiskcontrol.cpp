@@ -1,13 +1,7 @@
-#include <windows.h>
-#include <swdevice.h>
-#include <swdevicedef.h>
-#include <iostream>
-#include <functional>
-#include <string>
-#include <fstream>
-#include <filesystem>
-#include <conio.h>
-#include <synchapi.h>
+#include "pch.h"
+
+const wchar_t* deviceDesc = L"VirtualDisk Device";
+const wchar_t* hwId = L"Root\\VirtualDisk\0\0";
 
 void WINAPI SwDeviceCreateCallback(
     HSWDEVICE hSwDevice,
@@ -16,18 +10,23 @@ void WINAPI SwDeviceCreateCallback(
     PCWSTR pszDeviceInstanceId
 )
 {
+    HRESULT hr = CreateResult;
+    if (FAILED(hr))
+    {
+        std::cout << "CreateResult argument in SwDeviceCreateCallback is invalid, the error code: " << hr << std::endl;
+        return;
+    }
     HANDLE hEvent = *(HANDLE*)pContext;
     SetEvent(hEvent);
 
     UNREFERENCED_PARAMETER(hSwDevice);
-    UNREFERENCED_PARAMETER(CreateResult);
     UNREFERENCED_PARAMETER(pszDeviceInstanceId);
 }
 
 HSWDEVICE createDevice(const wchar_t* filePath)
 {
-    HSWDEVICE hSwDevice = NULL;
-    HANDLE hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    HSWDEVICE hSwDevice = nullptr;
+    HANDLE hEvent = CreateEvent(nullptr, false, false, nullptr);
     if (!hEvent)
     {
         std::cout << "CreateEvent failed." << std::endl;
@@ -36,9 +35,9 @@ HSWDEVICE createDevice(const wchar_t* filePath)
 
     auto instanceId = std::to_wstring(std::hash<std::wstring>{}(filePath));
     SW_DEVICE_CREATE_INFO deviceCreateInfo{ 0 };
-    PCWSTR description = L"VirtualDisk Device";
-    PCWSTR hardwareIds = L"Root\\VirtualDisk";
-    PCWSTR compatibleIds = L"Root\\VirtualDisk";
+    PCWSTR description = deviceDesc;
+    PCWSTR hardwareIds = hwId;
+    PCWSTR compatibleIds = hwId;
 
     deviceCreateInfo.cbSize = sizeof(deviceCreateInfo);
     deviceCreateInfo.pszzCompatibleIds = compatibleIds;
@@ -47,7 +46,7 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     deviceCreateInfo.pszDeviceDescription = description;
     deviceCreateInfo.CapabilityFlags = SWDeviceCapabilitiesRemovable | SWDeviceCapabilitiesDriverRequired;
 
-    HRESULT hr = SwDeviceCreate(L"VirtualDisk Device", L"HTREE\\ROOT\\0", &deviceCreateInfo, 0, NULL, SwDeviceCreateCallback, &hEvent, &hSwDevice);
+    HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 0, nullptr, SwDeviceCreateCallback, &hEvent, &hSwDevice);
     if (FAILED(hr))
     {
         std::cout << "SwDeviceCreate failed with the error code: " << hr << std::endl;
@@ -67,50 +66,58 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     return hSwDevice;
 }
 
-int main(int argc, wchar_t* argv[])
+int wmain(int argc, wchar_t* argv[])
 {
-    std::wstring command = argv[1];
-    const wchar_t* filePath = argv[2];
+    std::wstring command{};
+    const wchar_t* filePath{};
 
-    if (argc < 3 && (argc == 3 && command != L"open") && (argc == 4 && command != L"create"))
+    switch (argc)
     {
+    case 3:
+    case 4:
+    {
+        command = argv[1];
+        filePath = argv[2];
+
+        if (command == L"open")
+        {
+            std::fstream existingFile;
+            if (std::filesystem::exists(filePath))
+            {
+                existingFile.open(filePath, std::fstream::in | std::fstream::out | std::fstream::app);
+            }
+        }
+        else if (command == L"create")
+        {
+            const wchar_t* sizeChar = argv[3];
+
+            if (std::filesystem::exists(filePath))
+            {
+                std::cout << "The file exists. Using: virtualdiskcontrol open <filepath>" << std::endl;
+            }
+            else
+            {
+                std::ofstream newFile{filePath};
+                size_t sizeInt = _wtoi(sizeChar);
+                if (std::filesystem::exists(filePath))
+                {
+                    std::filesystem::resize_file(filePath, sizeInt);
+                }
+            }
+        }
+        else
+        {
+            std::cout << "Second parameter must be open or create." << std::endl;
+            return 1;
+        }
+        break;
+    }
+        
+    default:
         std::cout << "Correct using: " << std::endl <<
             "virtualdiskcontrol open <filepath> - open existing disk image" << std::endl <<
             "virtualdiskcontrol create <filepath> <size> - create and open new disk image" << std::endl;
         return 1;
-    }
-    if (argc == 3 && command == L"open")
-    {
-        std::fstream existingFile;
-        if (std::filesystem::exists(filePath))
-        {
-            existingFile.open(filePath, std::fstream::in | std::fstream::out | std::fstream::app);
-        }
-
-        if (existingFile.is_open())
-        {
-            existingFile.close();
-        }
-    }
-
-    if (argc == 4 && command == L"create")
-    {
-        const wchar_t* sizeChar = argv[3];
-
-        if (std::filesystem::exists(filePath))
-        {
-            std::cout << "The file exists. Using: virtualdiskcontrol open <filepath>" << std::endl;
-        }
-        else
-        {
-            std::fstream newFile(filePath);
-            size_t sizeInt = _wtoi(sizeChar);
-            std::filesystem::resize_file(filePath, sizeInt);
-            if (newFile.is_open())
-            {
-                newFile.close();
-            }
-        }
     }
 
     HSWDEVICE hSwDevice = createDevice(filePath);
