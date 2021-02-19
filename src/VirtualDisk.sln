@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		props\x64.props = props\x64.props
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "virtualdiskcontrol", "virtualdiskcontrol\virtualdiskcontrol.vcxproj", "{A50EDCB6-AA10-421D-8A3C-4957B88E705C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -35,6 +37,14 @@ Global
 		{CF51C52A-0264-4FEE-B690-13073FEFC6A4}.Release|x86.ActiveCfg = Release|Win32
 		{CF51C52A-0264-4FEE-B690-13073FEFC6A4}.Release|x86.Build.0 = Release|Win32
 		{CF51C52A-0264-4FEE-B690-13073FEFC6A4}.Release|x86.Deploy.0 = Release|Win32
+		{A50EDCB6-AA10-421D-8A3C-4957B88E705C}.Debug|x64.ActiveCfg = Debug|x64
+		{A50EDCB6-AA10-421D-8A3C-4957B88E705C}.Debug|x64.Build.0 = Debug|x64
+		{A50EDCB6-AA10-421D-8A3C-4957B88E705C}.Debug|x86.ActiveCfg = Debug|Win32
+		{A50EDCB6-AA10-421D-8A3C-4957B88E705C}.Debug|x86.Build.0 = Debug|Win32
+		{A50EDCB6-AA10-421D-8A3C-4957B88E705C}.Release|x64.ActiveCfg = Release|x64
+		{A50EDCB6-AA10-421D-8A3C-4957B88E705C}.Release|x64.Build.0 = Release|x64
+		{A50EDCB6-AA10-421D-8A3C-4957B88E705C}.Release|x86.ActiveCfg = Release|Win32
+		{A50EDCB6-AA10-421D-8A3C-4957B88E705C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
