@@ -10,15 +10,15 @@ void WINAPI SwDeviceCreateCallback(
     PCWSTR pszDeviceInstanceId
 )
 {
+    HANDLE hEvent = *(HANDLE*)pContext;
+    SetEvent(hEvent);
+
     HRESULT hr = CreateResult;
     if (FAILED(hr))
     {
         std::cout << "CreateResult argument in SwDeviceCreateCallback is invalid, the error code: " << hr << std::endl;
         return;
     }
-    HANDLE hEvent = *(HANDLE*)pContext;
-    SetEvent(hEvent);
-
     UNREFERENCED_PARAMETER(hSwDevice);
     UNREFERENCED_PARAMETER(pszDeviceInstanceId);
 }
@@ -37,10 +37,9 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     SW_DEVICE_CREATE_INFO deviceCreateInfo{ 0 };
     PCWSTR description = deviceDesc;
     PCWSTR hardwareIds = hwId;
-    PCWSTR compatibleIds = hwId;
 
     deviceCreateInfo.cbSize = sizeof(deviceCreateInfo);
-    deviceCreateInfo.pszzCompatibleIds = compatibleIds;
+    deviceCreateInfo.pszzCompatibleIds = nullptr;
     deviceCreateInfo.pszInstanceId = instanceId.c_str();
     deviceCreateInfo.pszzHardwareIds = hardwareIds;
     deviceCreateInfo.pszDeviceDescription = description;
@@ -86,6 +85,11 @@ int wmain(int argc, wchar_t* argv[])
             {
                 existingFile.open(filePath, std::fstream::in | std::fstream::out | std::fstream::app);
             }
+            else
+            {
+                std::cout << "The file doesn`t exist. Using: virtualdiskcontrol create <filepath> <size>" << std::endl;
+                return 1;
+            }
         }
         else if (command == L"create")
         {
@@ -94,6 +98,7 @@ int wmain(int argc, wchar_t* argv[])
             if (std::filesystem::exists(filePath))
             {
                 std::cout << "The file exists. Using: virtualdiskcontrol open <filepath>" << std::endl;
+                return 1;
             }
             else
             {
@@ -112,7 +117,7 @@ int wmain(int argc, wchar_t* argv[])
         }
         break;
     }
-        
+
     default:
         std::cout << "Correct using: " << std::endl <<
             "virtualdiskcontrol open <filepath> - open existing disk image" << std::endl <<
@@ -127,13 +132,11 @@ int wmain(int argc, wchar_t* argv[])
         return -1;
     }
 
-    std::cout << "Press 1 to remove a device" << std::endl;
+    std::cout << "Press 1 to remove a device." << std::endl;
     bool close = false;
     std::cin >> close;
-    if (close)
-    {
-        SwDeviceClose(hSwDevice);
-    }
+
+    SwDeviceClose(hSwDevice);
 
     return 0;
 }
