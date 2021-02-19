@@ -58,7 +58,7 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     DWORD waitResult = WaitForSingleObject(hEvent, INFINITE);
     if (waitResult != WAIT_OBJECT_0)
     {
-        std::cout << "Wait for device creation failed" << std::endl;
+        std::cout << "Wait for device creation failed." << std::endl;
         return hSwDevice;
     }
     std::cout << "Device created." << std::endl;
@@ -123,11 +123,11 @@ int wmain(int argc, wchar_t* argv[])
     HSWDEVICE hSwDevice = createDevice(filePath);
     if (!hSwDevice)
     {
-        std::cout << "createDevice failed" << std::endl;
+        std::cout << "createDevice failed." << std::endl;
         return -1;
     }
 
-    std::cout << "Press 1 to to remove a device" << std::endl;
+    std::cout << "Press 1 to remove a device" << std::endl;
     bool close = false;
     std::cin >> close;
     if (close)
