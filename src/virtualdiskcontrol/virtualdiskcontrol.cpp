@@ -127,8 +127,10 @@ int wmain(int argc, wchar_t* argv[])
         return -1;
     }
 
-    std::cout << "Press any key to to remove a device" << std::endl;
-    if (_kbhit())
+    std::cout << "Press 1 to to remove a device" << std::endl;
+    bool close = false;
+    std::cin >> close;
+    if (close)
     {
         SwDeviceClose(hSwDevice);
     }
