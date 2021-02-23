@@ -10,3 +10,6 @@
 #include <filesystem>
 #include <conio.h>
 #include <synchapi.h>
+#include <Devpropdef.h>
+#include <initguid.h>
+#include <devpkey.h>

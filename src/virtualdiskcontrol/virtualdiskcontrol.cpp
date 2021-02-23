@@ -1,5 +1,7 @@
 #include "pch.h"
 
+DEFINE_DEVPROPKEY(DEVPKEY_FILEPATH, 0x8792f614, 0x3667, 0x4df0, 0x95, 0x49, 0x3a, 0xc6, 0x4b, 0x51, 0xa0, 0xdb, 2);
+
 const wchar_t* deviceDesc = L"VirtualDisk Device";
 const wchar_t* hwId = L"Root\\VirtualDisk\0\0";
 
@@ -26,6 +28,7 @@ void WINAPI SwDeviceCreateCallback(
 HSWDEVICE createDevice(const wchar_t* filePath)
 {
     HSWDEVICE hSwDevice = nullptr;
+
     HANDLE hEvent = CreateEvent(nullptr, false, false, nullptr);
     if (!hEvent)
     {
@@ -45,7 +48,18 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     deviceCreateInfo.pszDeviceDescription = description;
     deviceCreateInfo.CapabilityFlags = SWDeviceCapabilitiesRemovable | SWDeviceCapabilitiesDriverRequired;
 
-    HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 0, nullptr, SwDeviceCreateCallback, &hEvent, &hSwDevice);
+    DEVPROPCOMPKEY propCompoundKey{0};
+    propCompoundKey.Key = DEVPKEY_FILEPATH;
+    propCompoundKey.Store = DEVPROP_STORE_SYSTEM;
+
+    DEVPROPERTY devPropFilePath{};
+    devPropFilePath.CompKey = propCompoundKey;
+    devPropFilePath.Type = DEVPROP_TYPE_STRING;
+    devPropFilePath.BufferSize = (wcslen(filePath)+1) * sizeof(wchar_t);
+    devPropFilePath.Buffer = (PVOID)filePath;
+    DEVPROPERTY devPropsArray[] = { devPropFilePath };
+
+    HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 1, devPropsArray, SwDeviceCreateCallback, &hEvent, &hSwDevice);
     if (FAILED(hr))
     {
         std::cout << "SwDeviceCreate failed with the error code: " << hr << std::endl;
