@@ -1,6 +1,6 @@
 #include "pch.h"
 
-DEFINE_DEVPROPKEY(DEVPKEY_FILEPATH, 0x8792f614, 0x3667, 0x4df0, 0x95, 0x49, 0x3a, 0xc6, 0x4b, 0x51, 0xa0, 0xdb, 2);
+DEFINE_DEVPROPKEY(DEVPKEY_VIRTUALDISK_FILEPATH, 0x8792f614, 0x3667, 0x4df0, 0x95, 0x49, 0x3a, 0xc6, 0x4b, 0x51, 0xa0, 0xdb, 2);
 
 const wchar_t* deviceDesc = L"VirtualDisk Device";
 const wchar_t* hwId = L"Root\\VirtualDisk\0\0";
@@ -48,18 +48,31 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     deviceCreateInfo.pszDeviceDescription = description;
     deviceCreateInfo.CapabilityFlags = SWDeviceCapabilitiesRemovable | SWDeviceCapabilitiesDriverRequired;
 
-    DEVPROPCOMPKEY propCompoundKey{0};
-    propCompoundKey.Key = DEVPKEY_FILEPATH;
-    propCompoundKey.Store = DEVPROP_STORE_SYSTEM;
+    DEVPROPCOMPKEY propCompoundKey{ DEVPKEY_VIRTUALDISK_FILEPATH, DEVPROP_STORE_SYSTEM, 0};
 
     DEVPROPERTY devPropFilePath{};
     devPropFilePath.CompKey = propCompoundKey;
     devPropFilePath.Type = DEVPROP_TYPE_STRING;
-    devPropFilePath.BufferSize = (wcslen(filePath)+1) * sizeof(wchar_t);
-    devPropFilePath.Buffer = (PVOID)filePath;
-    DEVPROPERTY devPropsArray[] = { devPropFilePath };
 
-    HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 1, devPropsArray, SwDeviceCreateCallback, &hEvent, &hSwDevice);
+    const size_t sizeFilePath = (wcslen(filePath) + 1) * sizeof(wchar_t);
+    wchar_t ext[] = L"\\??\\";
+    const size_t sizeExt = (std::size(ext) - 1) * sizeof(wchar_t);
+
+    const size_t sizeBuffer = sizeFilePath + sizeExt;
+    wchar_t* buffer = (wchar_t*)malloc(sizeBuffer);
+    if (!buffer)
+    {
+        std::cout << "malloc failed." << std::endl;
+        return hSwDevice;
+    }
+
+    memcpy(buffer, ext, sizeExt);
+    memcpy(buffer + 4, filePath, sizeFilePath);
+
+    devPropFilePath.BufferSize = sizeBuffer;
+    devPropFilePath.Buffer = (PVOID)buffer;
+
+    HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 1, &devPropFilePath, SwDeviceCreateCallback, &hEvent, &hSwDevice);
     if (FAILED(hr))
     {
         std::cout << "SwDeviceCreate failed with the error code: " << hr << std::endl;
