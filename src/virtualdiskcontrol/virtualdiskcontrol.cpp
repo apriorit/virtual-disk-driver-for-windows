@@ -55,10 +55,10 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     devPropFilePath.Type = DEVPROP_TYPE_STRING;
 
     const size_t sizeFilePath = (wcslen(filePath) + 1) * sizeof(wchar_t);
-    wchar_t ext[] = L"\\??\\";
-    const size_t sizeExt = (std::size(ext) - 1) * sizeof(wchar_t);
+    wchar_t pref[] = L"\\??\\";
+    const size_t sizePref = (std::size(pref) - 1) * sizeof(wchar_t);
 
-    const size_t sizeBuffer = sizeFilePath + sizeExt;
+    const size_t sizeBuffer = sizeFilePath + sizePref;
     wchar_t* buffer = (wchar_t*)malloc(sizeBuffer);
     if (!buffer)
     {
@@ -66,7 +66,7 @@ HSWDEVICE createDevice(const wchar_t* filePath)
         return hSwDevice;
     }
 
-    memcpy(buffer, ext, sizeExt);
+    memcpy(buffer, pref, sizePref);
     memcpy(buffer + 4, filePath, sizeFilePath);
 
     devPropFilePath.BufferSize = sizeBuffer;
