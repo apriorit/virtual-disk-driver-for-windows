@@ -49,10 +49,7 @@ ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
 StartType      = 3               ; SERVICE_DEMAND_START
 ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %12%\VirtualDisk.sys
-AddReg=VirtualDisk_Device_AddReg
 
-[VirtualDisk_Device_AddReg]
-HKR,"Parameters","ImagePath",0x00000000,"\??\C:\imagenew.bin" 
 ;
 ;--- VirtualDisk_Device Coinstaller installation ------
 ;

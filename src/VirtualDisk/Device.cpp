@@ -1,13 +1,15 @@
 #include "pch.h"
 #include "Device.h"
+#include "DevPropKeys.h"
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
-
 const wchar_t DeviceName[] = L"\\Device\\MyVirtualDisk";
 
 NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit)
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(wdfDriver);
 
     WdfDeviceInitSetDeviceType(deviceInit, FILE_DEVICE_DISK);
     WdfDeviceInitSetIoType(deviceInit, WdfDeviceIoDirect);
@@ -21,25 +23,28 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
         return status;
     }
 
-    WDFKEY keyImagePath;
-    WdfDriverOpenParametersRegistryKey(wdfDriver, KEY_READ | KEY_WRITE, WDF_NO_OBJECT_ATTRIBUTES, &keyImagePath);
-    WDFSTRING stringObjImagePath;
-    status = WdfStringCreate(NULL, WDF_NO_OBJECT_ATTRIBUTES, &stringObjImagePath);
+    WDF_DEVICE_PROPERTY_DATA devPropData{0};
+    devPropData.PropertyKey = &DEVPKEY_VIRTUALDISK_FILEPATH;
+    devPropData.Lcid = LOCALE_NEUTRAL;
+    devPropData.Size = sizeof(WDF_DEVICE_PROPERTY_DATA);
+
+    WDFMEMORY memImagePath{};
+    DEVPROPTYPE propType;
+    status = WdfFdoInitAllocAndQueryPropertyEx(deviceInit, &devPropData, PagedPool, WDF_NO_OBJECT_ATTRIBUTES, &memImagePath, &propType );
     if (!NT_SUCCESS(status)) {
         return status;
     }
-    UNICODE_STRING valueImagePath;
-    RtlInitUnicodeString(&valueImagePath, L"ImagePath");
-    status = WdfRegistryQueryString(keyImagePath, &valueImagePath, stringObjImagePath);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
+    size_t buffSize{};
+    PVOID buffImagePath = WdfMemoryGetBuffer(memImagePath, &buffSize);
+
     UNICODE_STRING uniName;
-    WdfStringGetUnicodeString(stringObjImagePath, &uniName);
-        
+    uniName.Buffer = reinterpret_cast<PWCH>(buffImagePath);
+    uniName.Length = static_cast<USHORT>(buffSize-sizeof(wchar_t));
+    uniName.MaximumLength = static_cast<USHORT>(buffSize);
+ 
     OBJECT_ATTRIBUTES objAttr;
     InitializeObjectAttributes(&objAttr, &uniName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-    
+
     WDF_OBJECT_ATTRIBUTES fdoAttributes;
     WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&fdoAttributes, Device);
 

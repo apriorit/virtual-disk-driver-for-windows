@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "DevPropKeys.h"
 
 const wchar_t* deviceDesc = L"VirtualDisk Device";
 const wchar_t* hwId = L"Root\\VirtualDisk\0\0";
@@ -26,6 +27,7 @@ void WINAPI SwDeviceCreateCallback(
 HSWDEVICE createDevice(const wchar_t* filePath)
 {
     HSWDEVICE hSwDevice = nullptr;
+
     HANDLE hEvent = CreateEvent(nullptr, false, false, nullptr);
     if (!hEvent)
     {
@@ -45,7 +47,19 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     deviceCreateInfo.pszDeviceDescription = description;
     deviceCreateInfo.CapabilityFlags = SWDeviceCapabilitiesRemovable | SWDeviceCapabilitiesDriverRequired;
 
-    HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 0, nullptr, SwDeviceCreateCallback, &hEvent, &hSwDevice);
+    DEVPROPCOMPKEY propCompoundKey{ DEVPKEY_VIRTUALDISK_FILEPATH, DEVPROP_STORE_SYSTEM, 0};
+
+    DEVPROPERTY devPropFilePath{};
+    devPropFilePath.CompKey = propCompoundKey;
+    devPropFilePath.Type = DEVPROP_TYPE_STRING;
+
+    std::wstring pref = L"\\??\\";
+    std::wstring prefFilePath = pref + filePath;
+
+    devPropFilePath.BufferSize = (prefFilePath.size() + 1) * sizeof(wchar_t);
+    devPropFilePath.Buffer = static_cast<PVOID>(const_cast<wchar_t*>(prefFilePath.c_str()));
+
+    HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 1, &devPropFilePath, SwDeviceCreateCallback, &hEvent, &hSwDevice);
     if (FAILED(hr))
     {
         std::cout << "SwDeviceCreate failed with the error code: " << hr << std::endl;
