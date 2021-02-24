@@ -7,6 +7,3 @@
 #include <initguid.h>
 #include <ntddstor.h>
 #include <ntddscsi.h>
-#include <Devpropdef.h>
-#include <initguid.h>
-#include <devpkey.h>

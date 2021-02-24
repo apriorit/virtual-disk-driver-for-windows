@@ -1,6 +1,5 @@
 #include "pch.h"
-
-DEFINE_DEVPROPKEY(DEVPKEY_VIRTUALDISK_FILEPATH, 0x8792f614, 0x3667, 0x4df0, 0x95, 0x49, 0x3a, 0xc6, 0x4b, 0x51, 0xa0, 0xdb, 2);
+#include "Guid.h"
 
 const wchar_t* deviceDesc = L"VirtualDisk Device";
 const wchar_t* hwId = L"Root\\VirtualDisk\0\0";
@@ -54,23 +53,12 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     devPropFilePath.CompKey = propCompoundKey;
     devPropFilePath.Type = DEVPROP_TYPE_STRING;
 
-    const size_t sizeFilePath = (wcslen(filePath) + 1) * sizeof(wchar_t);
-    wchar_t pref[] = L"\\??\\";
-    const size_t sizePref = (std::size(pref) - 1) * sizeof(wchar_t);
 
-    const size_t sizeBuffer = sizeFilePath + sizePref;
-    wchar_t* buffer = (wchar_t*)malloc(sizeBuffer);
-    if (!buffer)
-    {
-        std::cout << "malloc failed." << std::endl;
-        return hSwDevice;
-    }
+    std::wstring pref = L"\\??\\";
+    std::wstring prefFilePath = pref + filePath;
 
-    memcpy(buffer, pref, sizePref);
-    memcpy(buffer + 4, filePath, sizeFilePath);
-
-    devPropFilePath.BufferSize = sizeBuffer;
-    devPropFilePath.Buffer = (PVOID)buffer;
+    devPropFilePath.BufferSize = (prefFilePath.size() + 1) * sizeof(wchar_t);
+    devPropFilePath.Buffer = (PVOID)prefFilePath.c_str();
 
     HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 1, &devPropFilePath, SwDeviceCreateCallback, &hEvent, &hSwDevice);
     if (FAILED(hr))

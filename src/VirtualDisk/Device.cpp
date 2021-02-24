@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Device.h"
+#include "Guid.h"
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
-DEFINE_DEVPROPKEY(DEVPKEY_VIRTUALDISK_FILEPATH, 0x8792f614, 0x3667, 0x4df0, 0x95, 0x49, 0x3a, 0xc6, 0x4b, 0x51, 0xa0, 0xdb, 2);
 const wchar_t DeviceName[] = L"\\Device\\MyVirtualDisk";
 
 NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit)
