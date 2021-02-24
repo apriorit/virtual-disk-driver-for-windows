@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Guid.h"
+#include "DefineDevPropKey.h"
 
 const wchar_t* deviceDesc = L"VirtualDisk Device";
 const wchar_t* hwId = L"Root\\VirtualDisk\0\0";
@@ -57,7 +57,7 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     std::wstring prefFilePath = pref + filePath;
 
     devPropFilePath.BufferSize = (prefFilePath.size() + 1) * sizeof(wchar_t);
-    devPropFilePath.Buffer = (PVOID)prefFilePath.c_str();
+    devPropFilePath.Buffer = static_cast<PVOID>(const_cast<wchar_t*>(prefFilePath.c_str()));
 
     HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 1, &devPropFilePath, SwDeviceCreateCallback, &hEvent, &hSwDevice);
     if (FAILED(hr))

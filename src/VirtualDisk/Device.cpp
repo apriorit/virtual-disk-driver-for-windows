@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Device.h"
-#include "Guid.h"
+#include "DefineDevPropKey.h"
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
 const wchar_t DeviceName[] = L"\\Device\\MyVirtualDisk";
