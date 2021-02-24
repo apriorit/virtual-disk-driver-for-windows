@@ -53,7 +53,6 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     devPropFilePath.CompKey = propCompoundKey;
     devPropFilePath.Type = DEVPROP_TYPE_STRING;
 
-
     std::wstring pref = L"\\??\\";
     std::wstring prefFilePath = pref + filePath;
 
