@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "DefineDevPropKey.h"
+#include "DevPropKeys.h"
 
 const wchar_t* deviceDesc = L"VirtualDisk Device";
 const wchar_t* hwId = L"Root\\VirtualDisk\0\0";

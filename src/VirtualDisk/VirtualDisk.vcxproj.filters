@@ -24,8 +24,8 @@
     <ClInclude Include="pch.h">
       <Filter>Pch</Filter>
     </ClInclude>
-    <ClInclude Include="DefineDevPropKey.h">
-      <Filter>DevPropKey</Filter>
+    <ClInclude Include="DevPropKeys.h">
+      <Filter>DevPropKeys</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -44,7 +44,7 @@
     <Filter Include="Main">
       <UniqueIdentifier>{5d321f7f-9542-4c7c-81ab-6d63b40c6fd0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="DevPropKey">
+    <Filter Include="DevPropKeys">
       <UniqueIdentifier>{403ab964-6834-4111-8865-2e5946999125}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
