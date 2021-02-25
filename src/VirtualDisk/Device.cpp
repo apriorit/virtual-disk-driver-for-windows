@@ -3,7 +3,6 @@
 #include "DevPropKeys.h"
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
-const wchar_t DeviceName[] = L"\\Device\\MyVirtualDisk";
 
 NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit)
 {
@@ -13,15 +12,6 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
 
     WdfDeviceInitSetDeviceType(deviceInit, FILE_DEVICE_DISK);
     WdfDeviceInitSetIoType(deviceInit, WdfDeviceIoDirect);
-    
-    UNICODE_STRING deviceName;
-    RtlInitUnicodeString(&deviceName, DeviceName);
-    
-    NTSTATUS status = STATUS_SUCCESS;
-    status = WdfDeviceInitAssignName(deviceInit, &deviceName);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
 
     WDF_DEVICE_PROPERTY_DATA devPropData{0};
     devPropData.PropertyKey = &DEVPKEY_VIRTUALDISK_FILEPATH;
@@ -30,7 +20,7 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
 
     WDFMEMORY memImagePath{};
     DEVPROPTYPE propType;
-    status = WdfFdoInitAllocAndQueryPropertyEx(deviceInit, &devPropData, PagedPool, WDF_NO_OBJECT_ATTRIBUTES, &memImagePath, &propType );
+    NTSTATUS status = WdfFdoInitAllocAndQueryPropertyEx(deviceInit, &devPropData, PagedPool, WDF_NO_OBJECT_ATTRIBUTES, &memImagePath, &propType );
     if (!NT_SUCCESS(status)) {
         return status;
     }
