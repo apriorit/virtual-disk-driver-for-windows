@@ -124,9 +124,38 @@ int wmain(int argc, wchar_t* argv[])
                 }
             }
         }
+        else if (command == L"close")
+        {
+            if (std::filesystem::exists(filePath))
+            {
+                HSWDEVICE hSwDevice = createDevice(filePath);
+                if (!hSwDevice)
+                {
+                    std::cout << "createDevice failed." << std::endl;
+                    return -1;
+                }
+
+                HRESULT hr = SwDeviceSetLifetime(hSwDevice, SWDeviceLifetimeHandle);
+                if (FAILED(hr))
+                {
+                    std::cout << "SwDeviceSetLifetime failed with the error code: " << hr << std::endl;
+                    return -1;
+                }
+
+                SwDeviceClose(hSwDevice);
+
+                std::cout << "Device closed." << std::endl;
+            }
+            else
+            {
+                std::cout << "The file doesn`t exist." << std::endl;
+            }
+
+            return 0;
+        }
         else
         {
-            std::cout << "Second parameter must be open or create." << std::endl;
+            std::cout << "Second parameter must be open, create or close." << std::endl;
             return 1;
         }
         break;
@@ -146,9 +175,12 @@ int wmain(int argc, wchar_t* argv[])
         return -1;
     }
 
-    std::cout << "Press 1 to remove a device." << std::endl;
-    bool close = false;
-    std::cin >> close;
+    HRESULT hr = SwDeviceSetLifetime(hSwDevice, SWDeviceLifetimeParentPresent);
+    if (FAILED(hr))
+    {
+        std::cout << "SwDeviceSetLifetime failed with the error code: " << hr << std::endl;
+        return -1;
+    }
 
     SwDeviceClose(hSwDevice);
 
