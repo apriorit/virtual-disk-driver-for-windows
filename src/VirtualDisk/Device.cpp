@@ -20,7 +20,8 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
     WDFMEMORY memFilePath{};
     DEVPROPTYPE devPropType;
     NTSTATUS status = WdfFdoInitAllocAndQueryPropertyEx(deviceInit, &devPropData, PagedPool, WDF_NO_OBJECT_ATTRIBUTES, &memFilePath, &devPropType );
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         return status;
     }
     size_t bufSize{};
@@ -50,13 +51,15 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
         FILE_OPEN,
         FILE_SYNCHRONOUS_IO_NONALERT,
         nullptr, 0);
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         return status;
     }
 
     WDFDEVICE hDevice;
     status = WdfDeviceCreate(&deviceInit, &fdoAttributes, &hDevice);
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         return status;
     }
 
@@ -65,7 +68,8 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
 
     FILE_STANDARD_INFORMATION fileInformation = {};
     status = ZwQueryInformationFile(self->m_fileHandle, &ioStatusBlock, &fileInformation, sizeof(fileInformation), FileStandardInformation);
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         return status;
     }
 
@@ -86,7 +90,8 @@ VOID Device::onDeviceContextCleanup(_In_ WDFOBJECT wdfDevice)
 NTSTATUS Device::init(WDFDEVICE hDevice, Device* self)
 {
     NTSTATUS status = WdfDeviceCreateDeviceInterface(hDevice, (LPGUID)&GUID_DEVINTERFACE_VOLUME, nullptr);
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         return status;
     }
 
@@ -101,7 +106,8 @@ NTSTATUS Device::init(WDFDEVICE hDevice, Device* self)
     status = WdfIoQueueCreate(hDevice, &queueConfig, WDF_NO_OBJECT_ATTRIBUTES, &queue);
 
     __analysis_assume(queueConfig.EvtIoStop == 0);
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         return status;
     }
 
@@ -120,7 +126,8 @@ NTSTATUS Device::init(WDFDEVICE hDevice, Device* self)
     WDFQUEUE newQueue;
     status = WdfIoQueueCreate(hDevice, &newQueueConfig, (WDF_OBJECT_ATTRIBUTES*)&queueAttributes, &newQueue);
     __analysis_assume(newQueueConfig.EvtIoStop == 0);
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         return status;
     }
     self->m_fileQueue = newQueue;
@@ -132,7 +139,8 @@ VOID Device::onIoRead(WDFQUEUE queue, WDFREQUEST request, size_t length)
     PVOID outputBuffer;
     NTSTATUS status = WdfRequestRetrieveOutputBuffer(request, 0, &outputBuffer, nullptr);
     ULONG_PTR bytesCopied = 0;
-    if (NT_SUCCESS(status)) {
+    if (NT_SUCCESS(status))
+    {
         WDF_REQUEST_PARAMETERS requestParams;
         WDF_REQUEST_PARAMETERS_INIT(&requestParams);
         WdfRequestGetParameters(request, &requestParams);
@@ -151,14 +159,15 @@ VOID Device::onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
     NTSTATUS status = WdfRequestRetrieveInputBuffer(request, 0, &inputBuffer, nullptr);
 
     ULONG_PTR bytesWritten = 0;
-    if (NT_SUCCESS(status)) {
-        WDF_REQUEST_PARAMETERS Param;
-        WDF_REQUEST_PARAMETERS_INIT(&Param);
-        WdfRequestGetParameters(request, &Param);
-        
+    if (NT_SUCCESS(status))
+    {
+        WDF_REQUEST_PARAMETERS requestParams;
+        WDF_REQUEST_PARAMETERS_INIT(&requestParams);
+        WdfRequestGetParameters(request, &requestParams);
+
         auto self = getDevice(WdfIoQueueGetDevice(queue));
         IO_STATUS_BLOCK ioStatusBlock;
-        status = ZwWriteFile(self->m_fileHandle, nullptr, nullptr, nullptr, &ioStatusBlock, inputBuffer, (ULONG)length, (PLARGE_INTEGER)&Param.Parameters.Write.DeviceOffset, nullptr);
+        status = ZwWriteFile(self->m_fileHandle, nullptr, nullptr, nullptr, &ioStatusBlock, inputBuffer, (ULONG)length, (PLARGE_INTEGER)&requestParams.Parameters.Write.DeviceOffset, nullptr);
         bytesWritten = ioStatusBlock.Information;
     }
 
@@ -203,7 +212,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     {
         STORAGE_DEVICE_NUMBER* storageDeviceNumber;
         status = WdfRequestRetrieveOutputBuffer(request, sizeof(STORAGE_DEVICE_NUMBER), (PVOID*)&storageDeviceNumber, nullptr);
-        if (!NT_SUCCESS(status)) {
+        if (!NT_SUCCESS(status))
+        {
             break;
         }
 
@@ -220,7 +230,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     {
         STORAGE_HOTPLUG_INFO* storageHotplugInfo;
         status = WdfRequestRetrieveOutputBuffer(request, sizeof(STORAGE_HOTPLUG_INFO), (PVOID*)&storageHotplugInfo, nullptr);
-        if (!NT_SUCCESS(status)) {
+        if (!NT_SUCCESS(status))
+        {
             break;
         }
 
@@ -239,18 +250,21 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     {
         STORAGE_PROPERTY_QUERY* inputBuffer;
         status = WdfRequestRetrieveInputBuffer(request, sizeof(STORAGE_PROPERTY_QUERY), (PVOID*)&inputBuffer, nullptr);
-        if (!NT_SUCCESS(status)) {
+        if (!NT_SUCCESS(status))
+        {
             break;
         }
 
         ULONG_PTR bytesToCopy;
-        switch (inputBuffer->PropertyId) {
+        switch (inputBuffer->PropertyId)
+        {
         case StorageDeviceProperty:
         {
             STORAGE_DEVICE_DESCRIPTOR* outputBuffer;
             STORAGE_DEVICE_DESCRIPTOR sdd = { 1, sizeof sdd, 0, 0, true, true, 0, 0, 0, 0, BusTypeVirtual };
             status = WdfRequestRetrieveOutputBuffer(request, 0, (PVOID*)&outputBuffer, nullptr);
-            if (!NT_SUCCESS(status)) {
+            if (!NT_SUCCESS(status))
+            {
                 break;
             }
             bytesToCopy = min(sizeof(sdd), outputBufferLength);
@@ -265,7 +279,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
             STORAGE_ADAPTER_DESCRIPTOR sad = { 1, sizeof sad, PAGE_SIZE, 1, 0, true, true, true, true, BusTypeVirtual };
             STORAGE_ADAPTER_DESCRIPTOR* outputBuffer;
             status = WdfRequestRetrieveOutputBuffer(request, 0, (PVOID*)&outputBuffer, nullptr);
-            if (!NT_SUCCESS(status)) {
+            if (!NT_SUCCESS(status))
+            {
                 break;
             }
             bytesToCopy = min(sizeof(sad), outputBufferLength);
@@ -282,7 +297,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     {
         GET_LENGTH_INFORMATION* getLengthInformation;
         status = WdfRequestRetrieveOutputBuffer(request, sizeof(GET_LENGTH_INFORMATION), (PVOID*)&getLengthInformation, nullptr);
-        if (!NT_SUCCESS(status)) {
+        if (!NT_SUCCESS(status))
+        {
             break;
         }
 
@@ -298,7 +314,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     {
         DISK_GEOMETRY* diskGeometry;
         status = WdfRequestRetrieveOutputBuffer(request, sizeof(DISK_GEOMETRY), (PVOID*)&diskGeometry, nullptr);
-        if (!NT_SUCCESS(status)) {
+        if (!NT_SUCCESS(status))
+        {
             break;
         }
 
@@ -318,7 +335,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     {
         SCSI_ADDRESS* scsiAddress;
         status = WdfRequestRetrieveOutputBuffer(request, sizeof(SCSI_ADDRESS), (PVOID*)&scsiAddress, nullptr);
-        if (!NT_SUCCESS(status)) {
+        if (!NT_SUCCESS(status))
+        {
             break;
         }
 
@@ -345,7 +363,8 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     {
         PARTITION_INFORMATION* partInfo;
         status = WdfRequestRetrieveOutputBuffer(request, sizeof(PARTITION_INFORMATION), (PVOID*)&partInfo, nullptr);
-        if (!NT_SUCCESS(status)) {
+        if (!NT_SUCCESS(status))
+        {
             break;
         }
 
