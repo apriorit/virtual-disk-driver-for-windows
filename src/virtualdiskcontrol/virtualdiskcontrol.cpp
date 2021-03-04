@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "DevPropKeys.h"
 
-const wchar_t* deviceDesc = L"VirtualDisk Device";
-const wchar_t* hwId = L"Root\\VirtualDisk\0\0";
+const wchar_t* gDeviceDesc = L"VirtualDisk Device";
+const wchar_t* gHwId = L"Root\\VirtualDisk\0\0";
+const wchar_t* gEnumeratorName = L"ROOT";
+const wchar_t* gParentDeviceInstance = L"HTREE\\ROOT\\0";
 
 void WINAPI SwDeviceCreateCallback(
     HSWDEVICE hSwDevice,
@@ -26,7 +28,7 @@ void WINAPI SwDeviceCreateCallback(
 
 HSWDEVICE createDevice(const wchar_t* filePath)
 {
-    HSWDEVICE hSwDevice = nullptr;
+    HSWDEVICE hSwDevice{};
 
     HANDLE hEvent = CreateEvent(nullptr, false, false, nullptr);
     if (!hEvent)
@@ -35,13 +37,12 @@ HSWDEVICE createDevice(const wchar_t* filePath)
         return hSwDevice;
     }
 
-    auto instanceId = std::to_wstring(std::hash<std::wstring>{}(filePath));
-    SW_DEVICE_CREATE_INFO deviceCreateInfo{ 0 };
-    PCWSTR description = deviceDesc;
-    PCWSTR hardwareIds = hwId;
+    SW_DEVICE_CREATE_INFO deviceCreateInfo{};
+    PCWSTR description = gDeviceDesc;
+    PCWSTR hardwareIds = gHwId;
 
     deviceCreateInfo.cbSize = sizeof(deviceCreateInfo);
-    deviceCreateInfo.pszzCompatibleIds = nullptr;
+    auto instanceId = std::to_wstring(std::hash<std::wstring>{}(filePath));
     deviceCreateInfo.pszInstanceId = instanceId.c_str();
     deviceCreateInfo.pszzHardwareIds = hardwareIds;
     deviceCreateInfo.pszDeviceDescription = description;
@@ -52,14 +53,12 @@ HSWDEVICE createDevice(const wchar_t* filePath)
     DEVPROPERTY devPropFilePath{};
     devPropFilePath.CompKey = propCompoundKey;
     devPropFilePath.Type = DEVPROP_TYPE_STRING;
-
     std::wstring pref = L"\\??\\";
-    std::wstring prefFilePath = pref + filePath;
+    std::wstring fullFilePath = pref + filePath;
+    devPropFilePath.BufferSize = (fullFilePath.size() + 1) * sizeof(wchar_t);
+    devPropFilePath.Buffer = static_cast<PVOID>(const_cast<wchar_t*>(fullFilePath.c_str()));
 
-    devPropFilePath.BufferSize = (prefFilePath.size() + 1) * sizeof(wchar_t);
-    devPropFilePath.Buffer = static_cast<PVOID>(const_cast<wchar_t*>(prefFilePath.c_str()));
-
-    HRESULT hr = SwDeviceCreate(L"ROOT", L"HTREE\\ROOT\\0", &deviceCreateInfo, 1, &devPropFilePath, SwDeviceCreateCallback, &hEvent, &hSwDevice);
+    HRESULT hr = SwDeviceCreate(gEnumeratorName, gParentDeviceInstance, &deviceCreateInfo, 1, &devPropFilePath, SwDeviceCreateCallback, &hEvent, &hSwDevice);
     if (FAILED(hr))
     {
         std::cout << "SwDeviceCreate failed with the error code: " << hr << std::endl;
@@ -107,7 +106,7 @@ int wmain(int argc, wchar_t* argv[])
         }
         else if (command == L"create")
         {
-            const wchar_t* sizeChar = argv[3];
+            const wchar_t* fileSizeChar = argv[3];
 
             if (std::filesystem::exists(filePath))
             {
@@ -117,10 +116,9 @@ int wmain(int argc, wchar_t* argv[])
             else
             {
                 std::ofstream newFile{filePath};
-                size_t sizeInt = _wtoi(sizeChar);
                 if (std::filesystem::exists(filePath))
                 {
-                    std::filesystem::resize_file(filePath, sizeInt);
+                    std::filesystem::resize_file(filePath, _wtoi(fileSizeChar));
                 }
             }
         }
