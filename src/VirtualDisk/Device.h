@@ -4,7 +4,7 @@ class Device
 {
 public:
     static NTSTATUS create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit);
-    
+
 private:
     Device(_In_ WDFDEVICE device);
     ~Device() = default;
@@ -22,5 +22,3 @@ private:
     LARGE_INTEGER m_fileSize;
     WDFQUEUE m_fileQueue;
 };
-
-
