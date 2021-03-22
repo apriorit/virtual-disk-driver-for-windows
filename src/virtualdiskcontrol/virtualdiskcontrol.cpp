@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "DevPropKeys.h"
+namespace fs = std::filesystem;
 
 const wchar_t* gDeviceDesc = L"VirtualDisk Device";
 const wchar_t* gHwId = L"Root\\VirtualDisk\0\0";
@@ -82,6 +83,7 @@ int wmain(int argc, wchar_t* argv[])
 {
     std::wstring command{};
     const wchar_t* filePath{};
+    fs::path absoluteFilePath{};
 
     switch (argc)
     {
@@ -90,13 +92,14 @@ int wmain(int argc, wchar_t* argv[])
     {
         command = argv[1];
         filePath = argv[2];
+        absoluteFilePath = fs::absolute(filePath);
 
         if (command == L"open")
         {
             std::fstream existingFile;
-            if (std::filesystem::exists(filePath))
+            if (std::filesystem::exists(absoluteFilePath))
             {
-                existingFile.open(filePath, std::fstream::in | std::fstream::out | std::fstream::app);
+                existingFile.open(absoluteFilePath, std::fstream::in | std::fstream::out | std::fstream::app);
             }
             else
             {
@@ -106,27 +109,32 @@ int wmain(int argc, wchar_t* argv[])
         }
         else if (command == L"create")
         {
+            if (argc != 4)
+            {
+                std::cout << "Please enter size after create: virtualdiskcontrol create <filepath> <size>" << std::endl;
+                return 1;
+            }
             const wchar_t* fileSizeChar = argv[3];
 
-            if (std::filesystem::exists(filePath))
+            if (std::filesystem::exists(absoluteFilePath))
             {
                 std::cout << "The file exists. Using: virtualdiskcontrol open <filepath>" << std::endl;
                 return 1;
             }
             else
             {
-                std::ofstream newFile{filePath};
-                if (std::filesystem::exists(filePath))
+                std::ofstream newFile{ absoluteFilePath };
+                if (std::filesystem::exists(absoluteFilePath))
                 {
-                    std::filesystem::resize_file(filePath, _wtoi(fileSizeChar));
+                    std::filesystem::resize_file(absoluteFilePath, _wtoi(fileSizeChar));
                 }
             }
         }
         else if (command == L"close")
         {
-            if (std::filesystem::exists(filePath))
+            if (std::filesystem::exists(absoluteFilePath))
             {
-                HSWDEVICE hSwDevice = createDevice(filePath);
+                HSWDEVICE hSwDevice = createDevice(absoluteFilePath.c_str());
                 if (!hSwDevice)
                 {
                     std::cout << "createDevice failed." << std::endl;
@@ -162,11 +170,12 @@ int wmain(int argc, wchar_t* argv[])
     default:
         std::cout << "Correct using: " << std::endl <<
             "virtualdiskcontrol open <filepath> - open existing disk image" << std::endl <<
-            "virtualdiskcontrol create <filepath> <size> - create and open new disk image" << std::endl;
+            "virtualdiskcontrol create <filepath> <size> - create and open new disk image" << std::endl<<
+            "virtualdiskcontrol close <filepath> - close disk image" << std::endl;
         return 1;
     }
 
-    HSWDEVICE hSwDevice = createDevice(filePath);
+    HSWDEVICE hSwDevice = createDevice(absoluteFilePath.c_str());
     if (!hSwDevice)
     {
         std::cout << "createDevice failed." << std::endl;
