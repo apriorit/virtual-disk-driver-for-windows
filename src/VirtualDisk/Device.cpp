@@ -11,6 +11,26 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
 
     WdfDeviceInitSetDeviceType(deviceInit, FILE_DEVICE_DISK);
     WdfDeviceInitSetIoType(deviceInit, WdfDeviceIoDirect);
+    
+    static int counter{1};
+    WDFMEMORY memUniqueName;
+    PVOID bufferUniqueName;
+    NTSTATUS status = WdfMemoryCreate(WDF_NO_OBJECT_ATTRIBUTES, PagedPool, 0, sizeof(wchar_t) * 100, &memUniqueName, &bufferUniqueName);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    UNICODE_STRING uniqueDeviceName;
+    uniqueDeviceName.Buffer = reinterpret_cast<PWCH>(bufferUniqueName);
+    uniqueDeviceName.Length = static_cast <USHORT>(sizeof(wchar_t) * 100 - sizeof(wchar_t));
+    uniqueDeviceName.MaximumLength = static_cast <USHORT>(sizeof(wchar_t) * 100);
+    RtlUnicodeStringPrintf(&uniqueDeviceName, L"\\Device\\MyVirtualDisk %d", counter);
+    ++counter;
+
+    status = WdfDeviceInitAssignName(deviceInit, &uniqueDeviceName);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
 
     WDF_DEVICE_PROPERTY_DATA devPropData{};
     devPropData.PropertyKey = &DEVPKEY_VIRTUALDISK_FILEPATH;
@@ -19,7 +39,7 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
 
     WDFMEMORY memFilePath{};
     DEVPROPTYPE devPropType;
-    NTSTATUS status = WdfFdoInitAllocAndQueryPropertyEx(deviceInit, &devPropData, PagedPool, WDF_NO_OBJECT_ATTRIBUTES, &memFilePath, &devPropType );
+    status = WdfFdoInitAllocAndQueryPropertyEx(deviceInit, &devPropData, PagedPool, WDF_NO_OBJECT_ATTRIBUTES, &memFilePath, &devPropType );
     if (!NT_SUCCESS(status))
     {
         return status;
@@ -380,6 +400,92 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         partInfo->RewritePartition = false;
 
         bytesWritten = sizeof(*partInfo);
+    }
+
+    case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
+    {
+        MOUNTDEV_NAME* mountDevName;
+        status = WdfRequestRetrieveOutputBuffer(request, sizeof(*mountDevName), (PVOID*)&mountDevName, nullptr);
+        if (!NT_SUCCESS(status))
+        {
+            break;
+        }
+
+        WDFSTRING deviceName;
+        status = WdfStringCreate(nullptr, WDF_NO_OBJECT_ATTRIBUTES, &deviceName);
+        if (!NT_SUCCESS(status))
+        {
+            break;
+        }
+
+        status = WdfDeviceRetrieveDeviceName(WdfIoQueueGetDevice(queue), deviceName);
+        if (!NT_SUCCESS(status))
+        {
+            break;
+        }
+
+        UNICODE_STRING uniDeviceName;
+        WdfStringGetUnicodeString(deviceName, &uniDeviceName);
+
+        mountDevName->NameLength = uniDeviceName.Length;
+
+        if (FIELD_OFFSET(MOUNTDEV_NAME, Name) + uniDeviceName.Length > outputBufferLength)
+        {
+            status = STATUS_BUFFER_OVERFLOW;
+            bytesWritten = sizeof(*mountDevName);
+        }
+        else
+        {
+            memcpy(mountDevName->Name, uniDeviceName.Buffer, uniDeviceName.Length);
+            status = STATUS_SUCCESS;
+            bytesWritten = FIELD_OFFSET(MOUNTDEV_NAME, Name) + uniDeviceName.Length;
+        }
+        break;
+    }
+
+    case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
+    {
+        MOUNTDEV_UNIQUE_ID* mountDevUniqueId;
+        status = WdfRequestRetrieveOutputBuffer(request, sizeof(*mountDevUniqueId), (PVOID*)&mountDevUniqueId, nullptr);
+        if (!NT_SUCCESS(status))
+        {
+            break;
+        }
+
+        WDF_DEVICE_PROPERTY_DATA devPropData{};
+        devPropData.PropertyKey = &DEVPKEY_Device_InstanceId;
+        devPropData.Lcid = LOCALE_NEUTRAL;
+        devPropData.Size = sizeof(WDF_DEVICE_PROPERTY_DATA);
+
+        WDFMEMORY deviceInstanceId{};
+        DEVPROPTYPE devPropType;
+        status = WdfDeviceAllocAndQueryPropertyEx(WdfIoQueueGetDevice(queue), &devPropData, PagedPool, WDF_NO_OBJECT_ATTRIBUTES, &deviceInstanceId, &devPropType);
+        if (!NT_SUCCESS(status))
+        {
+            break;
+        }
+        size_t bufSize{};
+        PVOID bufInstanceId = WdfMemoryGetBuffer(deviceInstanceId, &bufSize);
+
+        UNICODE_STRING uniInstanceId;
+        uniInstanceId.Buffer = reinterpret_cast<PWCH>(bufInstanceId);
+        uniInstanceId.Length = static_cast<USHORT>(bufSize - sizeof(wchar_t));
+        uniInstanceId.MaximumLength = static_cast<USHORT>(bufSize);
+
+        mountDevUniqueId->UniqueIdLength = uniInstanceId.Length;
+
+        if (FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + uniInstanceId.Length > outputBufferLength)
+        {
+            status = STATUS_BUFFER_OVERFLOW;
+            bytesWritten = sizeof(*mountDevUniqueId);
+        }
+        else
+        {
+            memcpy(mountDevUniqueId->UniqueId, uniInstanceId.Buffer, uniInstanceId.Length);
+            status = STATUS_SUCCESS;
+            bytesWritten = FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + uniInstanceId.Length;
+        }
+        break;
     }
 
     case IOCTL_DISK_SET_PARTITION_INFO:
