@@ -4,6 +4,7 @@
 
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
 const int gDeviceNumber = 10;
+const unsigned int kMaxDeviceNameLen = 100;
 
 NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit)
 {
@@ -11,23 +12,28 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
 
     WdfDeviceInitSetDeviceType(deviceInit, FILE_DEVICE_DISK);
     WdfDeviceInitSetIoType(deviceInit, WdfDeviceIoDirect);
-    
+
     static int counter{1};
     WDFMEMORY memUniqueName;
     PVOID bufferUniqueName;
-    NTSTATUS status = WdfMemoryCreate(WDF_NO_OBJECT_ATTRIBUTES, PagedPool, 0, sizeof(wchar_t) * 100, &memUniqueName, &bufferUniqueName);
+    NTSTATUS status = WdfMemoryCreate(WDF_NO_OBJECT_ATTRIBUTES, PagedPool, 0, sizeof(wchar_t) * kMaxDeviceNameLen, &memUniqueName, &bufferUniqueName);
     if (!NT_SUCCESS(status)) {
         return status;
     }
 
     UNICODE_STRING uniqueDeviceName;
     uniqueDeviceName.Buffer = reinterpret_cast<PWCH>(bufferUniqueName);
-    uniqueDeviceName.Length = static_cast <USHORT>(sizeof(wchar_t) * 100 - sizeof(wchar_t));
-    uniqueDeviceName.MaximumLength = static_cast <USHORT>(sizeof(wchar_t) * 100);
-    RtlUnicodeStringPrintf(&uniqueDeviceName, L"\\Device\\MyVirtualDisk %d", counter);
+    uniqueDeviceName.Length = static_cast <USHORT>(sizeof(wchar_t) * kMaxDeviceNameLen - sizeof(wchar_t));
+    uniqueDeviceName.MaximumLength = static_cast <USHORT>(sizeof(wchar_t) * kMaxDeviceNameLen);
+    RtlUnicodeStringPrintf(&uniqueDeviceName, L"\\Device\\MyVirtualDisk-%d", counter);
     ++counter;
 
     status = WdfDeviceInitAssignName(deviceInit, &uniqueDeviceName);
+    if (!NT_SUCCESS(status)) {
+        return status;
+    }
+
+    status = WdfDeviceInitAssignSDDLString(deviceInit, &SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX);
     if (!NT_SUCCESS(status)) {
         return status;
     }
