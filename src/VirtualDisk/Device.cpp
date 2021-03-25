@@ -335,7 +335,6 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
     }
 
     case IOCTL_DISK_GET_MEDIA_TYPES:
-    case IOCTL_STORAGE_GET_MEDIA_TYPES:
     case IOCTL_DISK_GET_DRIVE_GEOMETRY:
     {
         DISK_GEOMETRY* diskGeometry;
@@ -357,55 +356,11 @@ VOID Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         break;
     }
 
-    case IOCTL_SCSI_GET_ADDRESS:
-    {
-        SCSI_ADDRESS* scsiAddress;
-        status = WdfRequestRetrieveOutputBuffer(request, sizeof(SCSI_ADDRESS), (PVOID*)&scsiAddress, nullptr);
-        if (!NT_SUCCESS(status))
-        {
-            break;
-        }
-
-        scsiAddress->Length = sizeof(SCSI_ADDRESS);
-        scsiAddress->Lun = 0;
-        scsiAddress->PathId = 0;
-        scsiAddress->PortNumber = 0;
-        scsiAddress->TargetId = 0;
-
-        bytesWritten = sizeof(*scsiAddress);
-        break;
-    }
-
-    case IOCTL_DISK_ARE_VOLUMES_READY:
-    case IOCTL_DISK_VOLUMES_ARE_READY:
     case IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES:
     case IOCTL_DISK_IS_WRITABLE:
     {
         status = STATUS_SUCCESS;
         break;
-    }
-
-    case IOCTL_DISK_GET_PARTITION_INFO:
-    {
-        PARTITION_INFORMATION* partInfo;
-        status = WdfRequestRetrieveOutputBuffer(request, sizeof(PARTITION_INFORMATION), (PVOID*)&partInfo, nullptr);
-        if (!NT_SUCCESS(status))
-        {
-            break;
-        }
-
-        auto self = getDevice(WdfIoQueueGetDevice(queue));
-
-        partInfo->StartingOffset.QuadPart = 0;
-        partInfo->PartitionLength.QuadPart = self->m_fileSize.QuadPart;
-        partInfo->HiddenSectors = 0;
-        partInfo->PartitionNumber = 0;
-        partInfo->PartitionType = PARTITION_ENTRY_UNUSED;
-        partInfo->BootIndicator = false;
-        partInfo->RecognizedPartition = false;
-        partInfo->RewritePartition = false;
-
-        bytesWritten = sizeof(*partInfo);
     }
 
     case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
