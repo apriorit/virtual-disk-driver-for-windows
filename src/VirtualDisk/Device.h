@@ -7,7 +7,7 @@ public:
 
 private:
     Device() = default;
-    ~Device() = default;
+    ~Device();
 
     NTSTATUS init(WDFDEVICE hDevice, IO_STATUS_BLOCK& ioStatusBlock);
     static void onDeviceContextCleanup(_In_ WDFOBJECT wdfDevice);
@@ -17,8 +17,8 @@ private:
     static void onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In_ size_t outputBufferLength, _In_ size_t, _In_ ULONG ioControlCode);
 
 private:
-    HANDLE m_fileHandle;
-    LARGE_INTEGER m_fileSize;
-    WDFQUEUE m_fileQueue;
+    HANDLE m_fileHandle{};
+    LARGE_INTEGER m_fileSize{};
+    WDFQUEUE m_fileQueue{};
     static long m_counter;
 };
