@@ -95,7 +95,7 @@ NTSTATUS Device::create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT device
         return status;
     }
 
-    Device* self = getDevice(hDevice);
+    Device* self = new(getDevice(hDevice)) Device(); // when adding placement new here when testing on the target invalid handle error occurs
     self->m_fileHandle = handle;
     status = self->init(hDevice, ioStatusBlock);
     return status;
