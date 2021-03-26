@@ -72,7 +72,6 @@ KmdfLibraryVersion = $KMDFVERSION$
 [Strings]
 SPSVCINST_ASSOCSERVICE= 0x00000002
 ManufacturerName="Apriorit" 
-ClassName="VirtualDisk" 
 DiskName = "VirtualDisk Installation Disk"
-VirtualDisk.DeviceDesc = "VirtualDisk Device"
+VirtualDisk.DeviceDesc = "VirtualDisk Volume"
 VirtualDisk.SVCDESC = "VirtualDisk Service"
