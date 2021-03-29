@@ -109,18 +109,18 @@ VOID Device::onDeviceContextCleanup(_In_ WDFOBJECT wdfDevice)
 
 Device::~Device()
 {
-    ZwClose(this->m_fileHandle);
+    ZwClose(m_fileHandle);
 }
 
 NTSTATUS Device::init(WDFDEVICE hDevice, IO_STATUS_BLOCK& ioStatusBlock)
 {
     FILE_STANDARD_INFORMATION fileInformation = {};
-    NTSTATUS status = ZwQueryInformationFile(this->m_fileHandle, &ioStatusBlock, &fileInformation, sizeof(fileInformation), FileStandardInformation);
+    NTSTATUS status = ZwQueryInformationFile(m_fileHandle, &ioStatusBlock, &fileInformation, sizeof(fileInformation), FileStandardInformation);
     if (!NT_SUCCESS(status))
     {
         return status;
     }
-    this->m_fileSize = fileInformation.EndOfFile;
+    m_fileSize = fileInformation.EndOfFile;
 
     status = WdfDeviceCreateDeviceInterface(hDevice, (LPGUID)&GUID_DEVINTERFACE_VOLUME, nullptr);
     if (!NT_SUCCESS(status))
@@ -162,7 +162,7 @@ NTSTATUS Device::init(WDFDEVICE hDevice, IO_STATUS_BLOCK& ioStatusBlock)
     {
         return status;
     }
-    this->m_fileQueue = newQueue;
+    m_fileQueue = newQueue;
     return status;
 }
 
