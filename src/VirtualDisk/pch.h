@@ -1,5 +1,5 @@
 #pragma once
-
+#define _NO_CRT_STDIO_INLINE  // https://stackoverflow.com/a/67745800/122951
 #include <ntddk.h>
 #include <wdf.h>
 #include <ntstrsafe.h>

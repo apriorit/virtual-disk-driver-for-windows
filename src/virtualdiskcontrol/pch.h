@@ -2,11 +2,11 @@
 
 #include <windows.h>
 #include <swdevice.h>
-#include <swdevicedef.h>
 #include <iostream>
 #include <functional>
 #include <string>
+#include <string_view>
 #include <fstream>
 #include <filesystem>
-#include <conio.h>
-#include <synchapi.h>
+#include <exception>
+#include <atlsync.h>

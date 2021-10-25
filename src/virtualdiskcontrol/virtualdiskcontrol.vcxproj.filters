@@ -8,18 +8,27 @@
     <Filter Include="Pch">
       <UniqueIdentifier>{894723de-558e-485b-b722-ead88f8aefda}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SwVirtualDevice">
+      <UniqueIdentifier>{60971c18-d74d-4b36-9efe-ce23c422b811}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="virtualdiskcontrol.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>Main</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Pch</Filter>
     </ClCompile>
+    <ClCompile Include="SwVirtualDevice.cpp">
+      <Filter>SwVirtualDevice</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>Pch</Filter>
+    </ClInclude>
+    <ClInclude Include="SwVirtualDevice.h">
+      <Filter>SwVirtualDevice</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
