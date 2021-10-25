@@ -9,9 +9,9 @@ void printHelp()
     cout
         << "Virtual Disk control utility." << endl << endl
         << "USAGE: " << endl
-        << "  virtualdiskcontrol open <filepath> [filesize] - Open an existing disk image or create a new one." << endl
+        << "  VirtualDiskControl open <filepath> [filesize] - Open an existing disk image or create a new one." << endl
         << "                                                  If `filesize` is not specified the default value will be used." << endl
-        << "  virtualdiskcontrol close <filepath>           - Close a disk image." << endl;
+        << "  VirtualDiskControl close <filepath>           - Close a disk image." << endl;
 }
 
 int wmain(int argc, wchar_t* argv[]) try
