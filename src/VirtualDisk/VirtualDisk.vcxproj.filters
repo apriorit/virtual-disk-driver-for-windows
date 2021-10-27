@@ -13,6 +13,9 @@
     <ClCompile Include="pch.cpp">
       <Filter>Pch</Filter>
     </ClCompile>
+    <ClCompile Include="NewImpl.cpp">
+      <Filter>NewImpl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Driver.h">
@@ -26,6 +29,9 @@
     </ClInclude>
     <ClInclude Include="DevPropKeys.h">
       <Filter>DevPropKeys</Filter>
+    </ClInclude>
+    <ClInclude Include="NewImpl.h">
+      <Filter>NewImpl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +52,9 @@
     </Filter>
     <Filter Include="DevPropKeys">
       <UniqueIdentifier>{403ab964-6834-4111-8865-2e5946999125}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NewImpl">
+      <UniqueIdentifier>{8924c01c-c8f6-467e-b736-8d7b8e5361b3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
