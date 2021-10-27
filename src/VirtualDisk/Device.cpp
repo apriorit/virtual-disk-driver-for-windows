@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "Device.h"
-#include "DevPropKeys.h"
+#include "PropertyKeys.h"
 #include "NewImpl.h"
 
+// Declare context and getter function
 WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(Device, getDevice)
 
+// Additional getter function
 static Device* getDevice(WDFQUEUE queue)
 {
     return getDevice(WdfIoQueueGetDevice(queue));
@@ -14,8 +16,16 @@ long Device::m_counter = 0;
 
 NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
 {
+    //
+    // Set device type
+    //
+
     WdfDeviceInitSetDeviceType(deviceInit, FILE_DEVICE_DISK);
     WdfDeviceInitSetIoType(deviceInit, WdfDeviceIoDirect);
+
+    //
+    // Set device name
+    //
 
     const int kDeviceNameMaxLenght = sizeof(L"\\Device\\MyVirtualDisk-00000000");
     wchar_t deviceNameBuffer[kDeviceNameMaxLenght];
@@ -30,11 +40,19 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
         return status;
     }
 
+    //
+    // Set device permissions
+    //
+
     status = WdfDeviceInitAssignSDDLString(deviceInit, &SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX);
     if (!NT_SUCCESS(status))
     {
         return status;
     }
+
+    //
+    // Create device
+    //
 
     WDF_OBJECT_ATTRIBUTES deviceAttributes;
     WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&deviceAttributes, Device);
@@ -47,12 +65,22 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
         return status;
     }
 
+    //
+    // Initialize device
+    //
+
     auto self = new(getDevice(wdfDevice)) Device();
 
-    return self->init(wdfDevice);
+    status = self->init(wdfDevice);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    return STATUS_SUCCESS;
 }
 
-void Device::onCleanup(_In_ WDFOBJECT wdfDevice)
+void Device::onCleanup(WDFOBJECT wdfDevice)
 {
     getDevice(reinterpret_cast<WDFDEVICE>(wdfDevice))->~Device();
 }
@@ -67,23 +95,27 @@ Device::~Device()
 
 NTSTATUS Device::init(WDFDEVICE wdfDevice)
 {
+    //
+    // Get file path from device property data
+    //
+
     WDF_OBJECT_ATTRIBUTES attributes;
     WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
     attributes.ParentObject = reinterpret_cast<WDFOBJECT>(wdfDevice);
 
-    WDF_DEVICE_PROPERTY_DATA devPropData;
-    WDF_DEVICE_PROPERTY_DATA_INIT(&devPropData, &DEVPKEY_VIRTUALDISK_FILEPATH);
+    WDF_DEVICE_PROPERTY_DATA propertyData;
+    WDF_DEVICE_PROPERTY_DATA_INIT(&propertyData, &DEVPKEY_VIRTUALDISK_FILEPATH);
 
-    WDFMEMORY memFilePath{};
-    DEVPROPTYPE devPropType{};
-    NTSTATUS status = WdfDeviceAllocAndQueryPropertyEx(wdfDevice, &devPropData, PagedPool, &attributes, &memFilePath, &devPropType);
+    WDFMEMORY propertyMemory{};
+    DEVPROPTYPE propertyType{};
+    NTSTATUS status = WdfDeviceAllocAndQueryPropertyEx(wdfDevice, &propertyData, PagedPool, &attributes, &propertyMemory, &propertyType);
     if (!NT_SUCCESS(status))
     {
         return status;
     }
 
     size_t filePathBufferSize{};
-    PVOID filePathBuffer = WdfMemoryGetBuffer(memFilePath, &filePathBufferSize);
+    PVOID filePathBuffer = WdfMemoryGetBuffer(propertyMemory, &filePathBufferSize);
 
     UNICODE_STRING filePath
     {
@@ -168,6 +200,10 @@ NTSTATUS Device::init(WDFDEVICE wdfDevice)
 
 void Device::onIoRead(WDFQUEUE queue, WDFREQUEST request, size_t length)
 {
+    //
+    // Get buffer and parameters
+    //
+
     PVOID outputBuffer;
     NTSTATUS status = WdfRequestRetrieveOutputBuffer(request, 0, &outputBuffer, nullptr);
     if (!NT_SUCCESS(status))
@@ -180,6 +216,10 @@ void Device::onIoRead(WDFQUEUE queue, WDFREQUEST request, size_t length)
     WDF_REQUEST_PARAMETERS_INIT(&requestParams);
     WdfRequestGetParameters(request, &requestParams);
 
+    //
+    // Read from file
+    //
+
     IO_STATUS_BLOCK iosb{};
     status = ZwReadFile(getDevice(queue)->m_fileHandle,
         nullptr,
@@ -188,13 +228,17 @@ void Device::onIoRead(WDFQUEUE queue, WDFREQUEST request, size_t length)
         &iosb,
         outputBuffer,
         static_cast<ULONG>(length),
-        reinterpret_cast<PLARGE_INTEGER>(&requestParams.Parameters.Write.DeviceOffset),
+        reinterpret_cast<PLARGE_INTEGER>(&requestParams.Parameters.Read.DeviceOffset),
         nullptr);
     WdfRequestCompleteWithInformation(request, status, iosb.Information);
 }
 
 void Device::onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
 {
+    //
+    // Get buffer and parameters
+    //
+
     PVOID inputBuffer;
     NTSTATUS status = WdfRequestRetrieveInputBuffer(request, 0, &inputBuffer, nullptr);
     if (!NT_SUCCESS(status))
@@ -206,6 +250,10 @@ void Device::onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
     WDF_REQUEST_PARAMETERS requestParams;
     WDF_REQUEST_PARAMETERS_INIT(&requestParams);
     WdfRequestGetParameters(request, &requestParams);
+
+    //
+    // Write to file
+    //
 
     IO_STATUS_BLOCK iosb{};
     status = ZwWriteFile(getDevice(queue)->m_fileHandle,
@@ -222,19 +270,25 @@ void Device::onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
 
 void Device::onIoReadWriteForward(WDFQUEUE queue, WDFREQUEST request, size_t)
 {
+    //
+    // Forward read/write requests to the file i/o queue. To force processing in another thread raise IRQL.
+    //
+
     KIRQL oldIrql;
     KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
     WdfRequestForwardToIoQueue(request, getDevice(queue)->m_fileQueue);
     KeLowerIrql(oldIrql);
 }
 
-void Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In_ size_t outputBufferLength, _In_ size_t, _In_ ULONG ioControlCode)
+void Device::onIoDeviceControl(WDFQUEUE queue, WDFREQUEST request, size_t outputBufferLength, size_t, ULONG ioControlCode)
 {
     NTSTATUS status = STATUS_SUCCESS;
     ULONG_PTR bytesWritten = 0;
     auto self = getDevice(queue);
 
-    KdPrint(("IoControlCode=0x%X\n", ioControlCode));
+    //
+    // Handle required control codes
+    //
 
     switch (ioControlCode)
     {
@@ -343,6 +397,10 @@ void Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
 
         info->NameLength = deviceName.Length;
 
+        //
+        // Return as much info as fits in the buffer size
+        //
+
         auto requiredBufferLength = FIELD_OFFSET(MOUNTDEV_NAME, Name) + static_cast<ULONG>(deviceName.Length);
         if (requiredBufferLength > outputBufferLength)
         {
@@ -366,24 +424,23 @@ void Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
             break;
         }
 
-        WDF_DEVICE_PROPERTY_DATA devPropData{};
-        WDF_DEVICE_PROPERTY_DATA_INIT(&devPropData, &DEVPKEY_Device_InstanceId);
+        WDF_DEVICE_PROPERTY_DATA propertyData{};
+        WDF_DEVICE_PROPERTY_DATA_INIT(&propertyData, &DEVPKEY_Device_InstanceId);
 
         WDF_OBJECT_ATTRIBUTES attributes;
         WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
         attributes.ParentObject = request;
 
-        WDFMEMORY deviceInstanceId{};
-        DEVPROPTYPE devPropType;
-
-        status = WdfDeviceAllocAndQueryPropertyEx(WdfIoQueueGetDevice(queue), &devPropData, PagedPool, &attributes, &deviceInstanceId, &devPropType);
+        WDFMEMORY propertyMemory{};
+        DEVPROPTYPE propertyType{};
+        status = WdfDeviceAllocAndQueryPropertyEx(WdfIoQueueGetDevice(queue), &propertyData, PagedPool, &attributes, &propertyMemory, &propertyType);
         if (!NT_SUCCESS(status))
         {
             break;
         }
 
         size_t instanceIdBufferSize{};
-        PVOID instanceIdBuffer = WdfMemoryGetBuffer(deviceInstanceId, &instanceIdBufferSize);
+        PVOID instanceIdBuffer = WdfMemoryGetBuffer(propertyMemory, &instanceIdBufferSize);
 
         UNICODE_STRING instanceId
         {
@@ -393,6 +450,10 @@ void Device::onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In
         };
 
         info->UniqueIdLength = instanceId.Length;
+
+        //
+        // Return as much info as fits in the buffer size
+        //
 
         auto requiredBufferLength = FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + static_cast<ULONG>(instanceId.Length);
         if (requiredBufferLength > outputBufferLength)

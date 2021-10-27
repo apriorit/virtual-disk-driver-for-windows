@@ -1,6 +1,7 @@
 #include "pch.h"
-#include "DevPropKeys.h"
 #include "SwVirtualDevice.h"
+#include <initguid.h>
+#include "PropertyKeys.h"
 
 using namespace std;
 
@@ -35,7 +36,7 @@ SwVirtualDevice::SwVirtualDevice(const wchar_t* filePath)
         .BufferSize = static_cast<ULONG>((fullFilePath.size() + 1) * sizeof(wchar_t)),
         .Buffer = const_cast<wchar_t*>(fullFilePath.c_str()),
     };
-    
+
     CallbackData callbackData;
     HRESULT hr = SwDeviceCreate(kEnumeratorName,
         kParentDeviceInstance,

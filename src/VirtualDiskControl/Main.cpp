@@ -7,9 +7,12 @@ using namespace std;
 void printHelp()
 {
     cout
-        << "Virtual Disk control utility." << endl << endl
-        << "USAGE: " << endl
-        << "  VirtualDiskControl open <filepath> [filesize] - Open an existing disk image or create a new one." << endl
+        << "Virtual disk control utility (for a sample driver)." << endl 
+        << "Copyright(C) 2021 Apriorit, Inc." << endl
+        << endl
+        << "Usage: " << endl
+        << "  VirtualDiskControl open <filepath> [filesize] - Open an existing disk image or create a new one" << endl
+        << "                                                  with the size `filesize` MB." << endl
         << "                                                  If `filesize` is not specified the default value will be used." << endl
         << "  VirtualDiskControl close <filepath>           - Close a disk image." << endl;
 }
@@ -31,8 +34,8 @@ int wmain(int argc, wchar_t* argv[]) try
         {
             ofstream{ absoluteFilePath };
 
-            const int kDefaultFileSize = 100000000; // 100MB
-            int fileSize = argc >= 4 ? _wtoi(argv[3]) : kDefaultFileSize;
+            const int kDefaultFileSize = 100; // 100MB
+            const int fileSize = (argc >= 4 ? _wtoi(argv[3]) : kDefaultFileSize) * 1024 * 1024;
 
             fs::resize_file(absoluteFilePath, fileSize);
         }

@@ -10,11 +10,11 @@ private:
     ~Device();
 
     NTSTATUS init(WDFDEVICE wdfDevice);
-    static void onCleanup(_In_ WDFOBJECT wdfDevice);
+    static void onCleanup(WDFOBJECT wdfDevice);
     static void onIoRead(WDFQUEUE queue, WDFREQUEST request, size_t length);
     static void onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length);
     static void onIoReadWriteForward(WDFQUEUE queue, WDFREQUEST request, size_t);
-    static void onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In_ size_t outputBufferLength, _In_ size_t, _In_ ULONG ioControlCode);
+    static void onIoDeviceControl(WDFQUEUE queue, WDFREQUEST request, size_t outputBufferLength, size_t, ULONG ioControlCode);
 
 private:
     HANDLE m_fileHandle{};

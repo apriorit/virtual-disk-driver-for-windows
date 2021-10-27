@@ -159,7 +159,7 @@
   <ItemGroup>
     <ClInclude Include="Device.h" />
     <ClInclude Include="Driver.h" />
-    <ClInclude Include="DevPropKeys.h" />
+    <ClInclude Include="PropertyKeys.h" />
     <ClInclude Include="NewImpl.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
