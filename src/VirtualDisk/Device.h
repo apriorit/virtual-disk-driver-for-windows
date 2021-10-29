@@ -3,18 +3,18 @@
 class Device
 {
 public:
-    static NTSTATUS create(_In_ WDFDRIVER wdfDriver, _Inout_ PWDFDEVICE_INIT deviceInit);
+    static NTSTATUS create(_Inout_ PWDFDEVICE_INIT deviceInit);
 
 private:
     Device() = default;
     ~Device();
 
-    NTSTATUS init(WDFDEVICE hDevice, IO_STATUS_BLOCK& ioStatusBlock);
-    static void onDeviceContextCleanup(_In_ WDFOBJECT wdfDevice);
+    NTSTATUS init(WDFDEVICE wdfDevice);
+    static void onCleanup(WDFOBJECT wdfDevice);
     static void onIoRead(WDFQUEUE queue, WDFREQUEST request, size_t length);
     static void onIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length);
     static void onIoReadWriteForward(WDFQUEUE queue, WDFREQUEST request, size_t);
-    static void onIoDeviceControl(_In_ WDFQUEUE queue, _In_ WDFREQUEST request, _In_ size_t outputBufferLength, _In_ size_t, _In_ ULONG ioControlCode);
+    static void onIoDeviceControl(WDFQUEUE queue, WDFREQUEST request, size_t outputBufferLength, size_t, ULONG ioControlCode);
 
 private:
     HANDLE m_fileHandle{};
