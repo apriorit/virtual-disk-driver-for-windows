@@ -6,10 +6,10 @@ public:
     SwVirtualDevice(const wchar_t* filePath);
     ~SwVirtualDevice();
 
-    void setLifetime(SW_DEVICE_LIFETIME lifetime);
-
     SwVirtualDevice(const SwVirtualDevice&) = delete;
     SwVirtualDevice& operator=(const SwVirtualDevice&) = delete;
+
+    void setLifetime(SW_DEVICE_LIFETIME lifetime);
 
 private:
     struct CallbackData

@@ -24,7 +24,7 @@ PnpLockDown = 1
 ;
 
 [Standard.NT$ARCH$]
-%DeviceDescription% = VirtualDiskDevice, Root\VirtualDisk
+%DeviceDescription% = VirtualDiskDevice, Root\AprioritVirtualDisk
 
 ;
 ; Install section
