@@ -7,7 +7,7 @@ using namespace std;
 void printHelp()
 {
     cout
-        << "Virtual disk control utility. Copyright(C) 2021 Apriorit, Inc." << endl
+        << "Virtual disk control utility. Copyright(C) 2022 Apriorit, Inc." << endl
         << endl
         << "Usage: " << endl
         << "  VirtualDiskControl open <filepath> [filesize] - Open an existing disk image or create a new one" << endl

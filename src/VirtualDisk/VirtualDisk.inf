@@ -84,7 +84,7 @@ VirtualDisk.sys = 1,,
 [Strings]
 SPSVCINST_ASSOCSERVICE = 0x00000002
 ManufacturerName = "Apriorit, Inc." 
-DiskName = "VirtualDisk Installation Disk"
-DeviceDescription = "VirtualDisk Volume"
-ServiceDisplayName = "VirtualDisk Service"
-ServiceName = "VirtualDisk"
+DiskName = "Apriorit VirtualDisk Installation Disk"
+DeviceDescription = "Apriorit VirtualDisk Volume"
+ServiceDisplayName = "Apriorit VirtualDisk Service"
+ServiceName = "AprioritVirtualDisk"

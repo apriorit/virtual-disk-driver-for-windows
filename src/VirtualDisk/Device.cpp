@@ -27,12 +27,12 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
     // Set device name
     //
 
-    const int kDeviceNameMaxLenght = sizeof(L"\\Device\\MyVirtualDisk-00000000");
+    const int kDeviceNameMaxLenght = sizeof(L"\\Device\\AprioritVirtualDisk-00000000");
     wchar_t deviceNameBuffer[kDeviceNameMaxLenght];
 
     UNICODE_STRING deviceName;
     RtlInitEmptyUnicodeString(&deviceName, deviceNameBuffer, sizeof(deviceNameBuffer));
-    RtlUnicodeStringPrintf(&deviceName, L"\\Device\\MyVirtualDisk-%x", InterlockedIncrement(&m_counter));
+    RtlUnicodeStringPrintf(&deviceName, L"\\Device\\AprioritVirtualDisk-%x", InterlockedIncrement(&m_counter));
 
     NTSTATUS status = WdfDeviceInitAssignName(deviceInit, &deviceName);
     if (!NT_SUCCESS(status))
@@ -44,7 +44,8 @@ NTSTATUS Device::create(_Inout_ PWDFDEVICE_INIT deviceInit)
     // Set device permissions
     //
 
-    status = WdfDeviceInitAssignSDDLString(deviceInit, &SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RWX_RES_RWX);
+    static const UNICODE_STRING sddl = RTL_CONSTANT_STRING(L"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GRGWGXSD;;;WD)");
+    status = WdfDeviceInitAssignSDDLString(deviceInit, &sddl);
     if (!NT_SUCCESS(status))
     {
         return status;
