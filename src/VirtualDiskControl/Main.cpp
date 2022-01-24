@@ -7,13 +7,12 @@ using namespace std;
 void printHelp()
 {
     cout
-        << "Virtual disk control utility (for a sample driver)." << endl 
-        << "Copyright(C) 2021 Apriorit, Inc." << endl
+        << "Virtual disk control utility. Copyright(C) 2022 Apriorit, Inc." << endl
         << endl
         << "Usage: " << endl
         << "  VirtualDiskControl open <filepath> [filesize] - Open an existing disk image or create a new one" << endl
         << "                                                  with the size `filesize` MB." << endl
-        << "                                                  If `filesize` is not specified the default value will be used." << endl
+        << "                                                  `filesize` is optional, default value is 100." << endl
         << "  VirtualDiskControl close <filepath>           - Close a disk image." << endl;
 }
 

@@ -6,7 +6,7 @@
 using namespace std;
 
 const wchar_t kDeviceDescription[] = L"VirtualDisk Device";
-const wchar_t kHardwareIds[] = L"Root\\VirtualDisk\0";
+const wchar_t kHardwareIds[] = L"Root\\AprioritVirtualDisk\0";
 const wchar_t kEnumeratorName[] = L"ROOT";
 const wchar_t kParentDeviceInstance[] = L"HTREE\\ROOT\\0";
 
@@ -56,6 +56,7 @@ SwVirtualDevice::SwVirtualDevice(const wchar_t* filePath)
 
     if (FAILED(callbackData.hr))
     {
+        SwDeviceClose(m_handle);
         throw runtime_error("Device creation failed with the error code: "s + to_string(callbackData.hr));
     }
 }

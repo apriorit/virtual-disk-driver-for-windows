@@ -9,6 +9,9 @@ private:
     Device() = default;
     ~Device();
 
+    Device(const Device&) = delete;
+    Device& operator=(const Device&) = delete;
+
     NTSTATUS init(WDFDEVICE wdfDevice);
     static void onCleanup(WDFOBJECT wdfDevice);
     static void onIoRead(WDFQUEUE queue, WDFREQUEST request, size_t length);
